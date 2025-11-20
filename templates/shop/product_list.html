@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Products - Cartopia{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-header bg-gradient-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Categories</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{% url 'product_list' %}" class="list-group-item list-group-item-action {% if not selected_category %}active{% endif %}">
+                    All Categories
+                </a>
+                {% for category in categories %}
+                <a href="{% url 'product_list' %}?category={{ category.slug }}" 
+                   class="list-group-item list-group-item-action {% if selected_category == category.slug %}active{% endif %}">
+                    {{ category.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="mb-4">
+            <form method="get" class="d-flex">
+                <input type="text" name="search" class="form-control me-2" placeholder="Search products..." value="{{ search_query }}">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Search</button>
+            </form>
+        </div>
+        
+        <div class="row">
+            {% for product in page_obj %}
+            <div class="col-md-4 mb-4">
+                <div class="product-card-wrapper">
+                    <div class="card product-card shadow-sm" onclick="window.location.href='{% url 'product_detail' product.slug %}'" style="cursor: pointer;">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="card-img-top d-flex align-items-center justify-content-center product-image" style="background: var(--bg-darker);">
+                                <i class="bi bi-image" style="font-size: 4rem; color: var(--text-muted);"></i>
+                            </div>
+                        {% endif %}
+                        {% if product.is_in_stock %}
+                            <span class="badge bg-success badge-stock">In Stock</span>
+                        {% else %}
+                            <span class="badge bg-danger badge-stock">Out of Stock</span>
+                        {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text text-muted">{{ product.description|truncatewords:15 }}</p>
+                            <p class="card-text"><strong class="text-primary fs-4">${{ product.price }}</strong></p>
+                            <div class="btn-container" onclick="event.stopPropagation();">
+                                {% if user.is_authenticated and not user.is_staff %}
+                                    {% if product.is_in_stock %}
+                                        <a href="{% url 'cart_add' product.id %}" class="btn btn-primary w-100">
+                                            <i class="bi bi-cart-plus"></i> Add to Cart
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'product_detail' product.slug %}" class="btn btn-secondary w-100">
+                                            <i class="bi bi-eye"></i> View Details
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{% url 'product_detail' product.slug %}" class="btn btn-primary w-100">
+                                        <i class="bi bi-eye"></i> View Details
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> No products found.
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

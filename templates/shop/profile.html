@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Cartopia{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow-lg border-0">
+            <div class="card-body text-center">
+                {% if profile.profile_picture %}
+                    <img src="{{ profile.profile_picture.url }}" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #6366f1;" alt="Profile Picture">
+                {% else %}
+                    <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 150px; height: 150px; background: #8b5cf6; border: 4px solid #8b5cf6;">
+                        <i class="bi bi-person text-white" style="font-size: 4rem;"></i>
+                    </div>
+                {% endif %}
+                <h4 class="mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted mb-3">@{{ user.username }}</p>
+                <a href="{% url 'profile_edit' %}" class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-pencil"></i> Edit Profile
+                </a>
+                <a href="{% url 'logout' %}" class="btn btn-danger w-100">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </div>
+        
+        <div class="card shadow-lg border-0 mt-4">
+            <div class="card-header bg-gradient-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Account Info</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Email:</strong><br>{{ user.email }}</p>
+                <p><strong>Member since:</strong><br>{{ user.date_joined|date:"F Y" }}</p>
+                {% if profile.bio %}
+                    <hr>
+                    <p><strong>Bio:</strong></p>
+                    <p class="text-muted">{{ profile.bio }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-gradient-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-person-badge"></i> Personal Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>First Name:</strong>
+                        <p>{{ user.first_name|default:"Not set" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Last Name:</strong>
+                        <p>{{ user.last_name|default:"Not set" }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Username:</strong>
+                        <p>{{ user.username }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Email:</strong>
+                        <p>{{ user.email }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-lg border-0 mt-4">
+            <div class="card-header bg-gradient-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-activity"></i> Account Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h3 class="text-primary">{{ user.orders.count }}</h3>
+                        <p class="text-muted">Total Orders</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h3 class="text-primary">{{ user.wishlist.count }}</h3>
+                        <p class="text-muted">Wishlist Items</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h3 class="text-primary">{{ user.cart.count }}</h3>
+                        <p class="text-muted">Cart Items</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

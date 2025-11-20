@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Cartopia{% endblock %}
+
+{% block content %}
+<style>
+    .admin-status-select {
+        background: #ff8800 !important;
+        color: #ffffff !important;
+        border: 1px solid #ff7700 !important;
+    }
+    
+    .admin-status-select option {
+        background: #ff8800 !important;
+        color: #ffffff !important;
+    }
+    
+    .admin-status-select:focus {
+        background: #ff8800 !important;
+        color: #ffffff !important;
+        border-color: #ff7700 !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 136, 0, 0.25) !important;
+    }
+    
+    /* Force orange background for all status selects in admin dashboard */
+    table select[name="status"] {
+        background: #ff8800 !important;
+        color: #ffffff !important;
+        border: 1px solid #ff7700 !important;
+    }
+    
+    table select[name="status"] option {
+        background: #ff8800 !important;
+        color: #ffffff !important;
+    }
+</style>
+<div class="jumbotron p-4 rounded mb-4 shadow-lg border-0" style="background: #8b5cf6; color: white; border: 1px solid var(--border-color);">
+    <h2 class="mb-2"><i class="bi bi-speedometer2"></i> Welcome to Admin Dashboard</h2>
+    <p class="lead mb-0">Manage your e-commerce platform - Monitor orders, products, and users from one central location.</p>
+</div>
+
+<div class="mb-4">
+    <h3 class="mb-0"><i class="bi bi-bar-chart"></i> Statistics</h3>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-box"></i> Total Products</h5>
+                <h2>{{ total_products }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-cart-check"></i> Total Orders</h5>
+                <h2>{{ total_orders }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-people"></i> Total Users</h5>
+                <h2>{{ total_users }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Orders</h5>
+        <a href="{% url 'admin_product_list' %}" class="btn btn-light btn-sm">
+            <i class="bi bi-box-seam"></i> Manage Products
+        </a>
+    </div>
+    <div class="card-body">
+        {% if recent_orders %}
+        <table class="table">
+            <thead>
+                <tr style="background: #e0e0e0;">
+                    <th style="color: #1a1a1a;">ID</th>
+                    <th style="color: #1a1a1a;">User</th>
+                    <th style="color: #1a1a1a;">Status</th>
+                    <th style="color: #1a1a1a;">Total</th>
+                    <th style="color: #1a1a1a;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr style="background: #f5f5f5;">
+                    <td style="color: #1a1a1a;">#{{ order.id }}</td>
+                    <td style="color: #1a1a1a;">{{ order.user.username }}</td>
+                    <td>
+                        <form method="post" action="{% url 'order_update_status' order.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <select name="status" class="form-select form-select-sm d-inline-block admin-status-select" style="width: auto; background: #ff8800 !important; color: #ffffff !important; border: 1px solid #ff7700 !important; font-weight: 500;" onchange="this.form.submit()">
+                                <option value="pending" {% if order.status == 'pending' %}selected{% endif %} style="background: #ff8800; color: #ffffff;">Pending</option>
+                                <option value="processing" {% if order.status == 'processing' %}selected{% endif %} style="background: #ff8800; color: #ffffff;">Processing</option>
+                                <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %} style="background: #ff8800; color: #ffffff;">Shipped</option>
+                                <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %} style="background: #ff8800; color: #ffffff;">Delivered</option>
+                                <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %} style="background: #ff8800; color: #ffffff;">Cancelled</option>
+                            </select>
+                        </form>
+                    </td>
+                    <td style="color: #1a1a1a;">${{ order.total_price }}</td>
+                    <td style="color: #1a1a1a;">{{ order.created_at|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">No orders yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'product_create' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Add New Product
+    </a>
+    <a href="/admin/" class="btn btn-secondary">
+        <i class="bi bi-gear"></i> Django Admin
+    </a>
+</div>
+{% endblock %}
