@@ -25,7 +25,6 @@ class Command(BaseCommand):
             },
         }
         
-        # Update product names
         for old_name, new_data in updates.items():
             product = Product.objects.filter(name=old_name).first()
             if product:
@@ -34,7 +33,6 @@ class Command(BaseCommand):
                 product.save()
                 self.stdout.write(self.style.SUCCESS(f'Updated: {old_name} -> {new_data["name"]}'))
         
-        # Update specifications that are in Romanian
         products_with_romanian_specs = Product.objects.filter(specifications__icontains='Procesor')
         for product in products_with_romanian_specs:
             if 'Procesor:' in product.specifications:
@@ -45,7 +43,6 @@ class Command(BaseCommand):
                 product.save()
                 self.stdout.write(self.style.SUCCESS(f'Updated specifications for: {product.name}'))
         
-        # Update descriptions that are in Romanian - specific product updates
         description_updates = {
             'Laptop Gaming ASUS ROG Strix': 'ASUS ROG Strix gaming laptop with AMD Ryzen 9 processor, RTX 3070, 16GB RAM',
             'Webcam Logitech C920': 'Full HD 1080p webcam with stereo microphone, perfect for video conferencing',

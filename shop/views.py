@@ -16,7 +16,6 @@ from .decorators import admin_required
 
 
 def home(request):
-    """Homepage - afiseaza produsele recente si categorii"""
     categories = Category.objects.all()[:6]
     featured_products = Product.objects.filter(is_active=True)[:8]
     return render(request, 'shop/home.html', {
@@ -26,7 +25,6 @@ def home(request):
 
 
 def register(request):
-    """Inregistrare utilizator nou"""
     if request.user.is_authenticated:
         return redirect('home')
     
@@ -65,7 +63,6 @@ class CustomLoginView(LoginView):
 
 class CustomLogoutView(LogoutView):
     def dispatch(self, request, *args, **kwargs):
-        # Clear session data
         request.session.flush()
         return super().dispatch(request, *args, **kwargs)
     
@@ -75,7 +72,6 @@ class CustomLogoutView(LogoutView):
 
 
 def product_list(request):
-    """Lista tuturor produselor cu filtrare si cautare"""
     products = Product.objects.filter(is_active=True)
     category_slug = request.GET.get('category')
     search_query = request.GET.get('search')
@@ -106,7 +102,6 @@ def product_list(request):
 
 
 def product_detail(request, slug):
-    """Detalii produs"""
     product = get_object_or_404(Product, slug=slug, is_active=True)
     related_products = Product.objects.filter(
         category=product.category,
@@ -134,16 +129,12 @@ def product_detail(request, slug):
 
 
 def category_list(request):
-    """Lista tuturor categoriilor"""
     categories = Category.objects.all()
     return render(request, 'shop/category_list.html', {'categories': categories})
 
 
-# ============ ADMIN VIEWS ============
-
 @admin_required
 def admin_dashboard(request):
-    """Dashboard pentru admin"""
     total_products = Product.objects.count()
     total_orders = Order.objects.count()
     total_users = User.objects.count()
@@ -159,7 +150,6 @@ def admin_dashboard(request):
 
 @admin_required
 def product_create(request):
-    """Adaugare produs nou"""
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
@@ -173,7 +163,6 @@ def product_create(request):
 
 @admin_required
 def product_edit(request, slug):
-    """Editare produs"""
     product = get_object_or_404(Product, slug=slug)
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES, instance=product)
@@ -192,7 +181,6 @@ def product_edit(request, slug):
 
 @admin_required
 def product_delete(request, slug):
-    """Stergere produs"""
     product = get_object_or_404(Product, slug=slug)
     if request.method == 'POST':
         product_name = product.name
@@ -204,7 +192,6 @@ def product_delete(request, slug):
 
 @admin_required
 def order_update_status(request, order_id):
-    """Update order status - admin only"""
     order = get_object_or_404(Order, id=order_id)
     if request.method == 'POST':
         new_status = request.POST.get('status')
@@ -220,7 +207,6 @@ def order_update_status(request, order_id):
 
 @admin_required
 def admin_product_list(request):
-    """Lista produselor pentru admin (inclusiv inactive)"""
     products = Product.objects.all()
     search_query = request.GET.get('search')
     
@@ -240,11 +226,8 @@ def admin_product_list(request):
     })
 
 
-# ============ CART VIEWS ============
-
 @login_required
 def cart_view(request):
-    """Vizualizare cos de cumparaturi"""
     cart_items = Cart.objects.filter(user=request.user)
     total = sum(item.get_total_price() for item in cart_items)
     
@@ -256,7 +239,6 @@ def cart_view(request):
 
 @login_required
 def cart_add(request, product_id):
-    """Adaugare produs in cos"""
     product = get_object_or_404(Product, id=product_id, is_active=True)
     
     if not product.is_in_stock():
@@ -284,7 +266,6 @@ def cart_add(request, product_id):
 
 @login_required
 def cart_update(request, cart_id):
-    """Actualizare cantitate in cos"""
     cart_item = get_object_or_404(Cart, id=cart_id, user=request.user)
     
     if request.method == 'POST':
@@ -301,25 +282,20 @@ def cart_update(request, cart_id):
 
 @login_required
 def cart_remove(request, cart_id):
-    """Eliminare produs din cos"""
     cart_item = get_object_or_404(Cart, id=cart_id, user=request.user)
     cart_item.delete()
     messages.success(request, 'Product has been removed from cart!')
     return redirect('cart')
 
 
-# ============ WISHLIST VIEWS ============
-
 @login_required
 def wishlist_view(request):
-    """Vizualizare lista de favorite"""
     wishlist_items = Wishlist.objects.filter(user=request.user)
     return render(request, 'shop/wishlist.html', {'wishlist_items': wishlist_items})
 
 
 @login_required
 def wishlist_add(request, product_id):
-    """Adaugare produs in lista de favorite"""
     product = get_object_or_404(Product, id=product_id, is_active=True)
     wishlist_item, created = Wishlist.objects.get_or_create(
         user=request.user,
@@ -339,7 +315,6 @@ def wishlist_add(request, product_id):
 
 @login_required
 def wishlist_remove(request, wishlist_id):
-    """Eliminare produs din lista de favorite"""
     wishlist_item = get_object_or_404(Wishlist, id=wishlist_id, user=request.user)
     product_name = wishlist_item.product.name
     wishlist_item.delete()
@@ -347,18 +322,14 @@ def wishlist_remove(request, wishlist_id):
     return redirect('wishlist')
 
 
-# ============ CHECKOUT & ORDER VIEWS ============
-
 @login_required
 def checkout(request):
-    """Checkout - finalizare comanda"""
     cart_items = Cart.objects.filter(user=request.user)
     
     if not cart_items.exists():
         messages.error(request, 'Cart is empty!')
         return redirect('cart')
     
-    # Verificare stoc
     for item in cart_items:
         if item.quantity > item.product.stock:
             messages.error(request, f'Insufficient stock for {item.product.name}!')
@@ -380,7 +351,6 @@ def checkout(request):
             
             order.save()
             
-            # Creare OrderItems
             for cart_item in cart_items:
                 OrderItem.objects.create(
                     order=order,
@@ -388,17 +358,14 @@ def checkout(request):
                     quantity=cart_item.quantity,
                     price=cart_item.product.price
                 )
-                # Actualizare stoc
                 cart_item.product.stock -= cart_item.quantity
                 cart_item.product.save()
             
-            # Golire cos
             cart_items.delete()
             
             messages.success(request, f'Order #{order.id} has been placed successfully!')
             return redirect('order_detail', order_id=order.id)
     else:
-        # Pre-populare formular cu datele utilizatorului
         initial_data = {
             'first_name': request.user.first_name,
             'last_name': request.user.last_name,
@@ -416,23 +383,18 @@ def checkout(request):
 
 @login_required
 def order_list(request):
-    """Istoric comenzi utilizator"""
     orders = Order.objects.filter(user=request.user)
     return render(request, 'shop/order_list.html', {'orders': orders})
 
 
 @login_required
 def order_detail(request, order_id):
-    """Detalii comanda"""
     order = get_object_or_404(Order, id=order_id, user=request.user)
     return render(request, 'shop/order_detail.html', {'order': order})
 
 
-# ============ PROFILE VIEWS ============
-
 @login_required
 def profile(request):
-    """User profile page"""
     from .models import UserProfile
     profile_obj, created = UserProfile.objects.get_or_create(user=request.user)
     return render(request, 'shop/profile.html', {'profile': profile_obj})
@@ -440,7 +402,6 @@ def profile(request):
 
 @login_required
 def profile_edit(request):
-    """Edit user profile"""
     from .models import UserProfile
     profile_obj, created = UserProfile.objects.get_or_create(user=request.user)
     
@@ -448,7 +409,6 @@ def profile_edit(request):
         form = UserProfileForm(request.POST, request.FILES, instance=profile_obj, user=request.user)
         if form.is_valid():
             profile_obj = form.save()
-            # Update user fields
             request.user.first_name = form.cleaned_data['first_name']
             request.user.last_name = form.cleaned_data['last_name']
             request.user.email = form.cleaned_data['email']

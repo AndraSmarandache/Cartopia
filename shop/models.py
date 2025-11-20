@@ -5,7 +5,6 @@ from decimal import Decimal
 
 
 class UserProfile(models.Model):
-    """Extended user profile with profile picture"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True, verbose_name="Profile Picture")
     bio = models.TextField(blank=True, max_length=500, verbose_name="Bio")
@@ -144,7 +143,6 @@ class Order(models.Model):
     delivery_method = models.ForeignKey(DeliveryMethod, on_delete=models.SET_NULL, null=True, verbose_name="Delivery Method")
     delivery_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Delivery Cost")
     
-    # Delivery information
     first_name = models.CharField(max_length=100, verbose_name="First Name")
     last_name = models.CharField(max_length=100, verbose_name="Last Name")
     email = models.EmailField(verbose_name="Email")
@@ -165,7 +163,6 @@ class Order(models.Model):
         return f"Comanda #{self.id} - {self.user.username}"
 
     def get_products_total(self):
-        """Calculate total products price without delivery cost"""
         return self.total_price - self.delivery_cost
 
 

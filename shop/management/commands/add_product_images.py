@@ -10,7 +10,6 @@ class Command(BaseCommand):
     help = 'Add images to products that don\'t have them'
 
     def handle(self, *args, **options):
-        # Product images URLs - using reliable image sources with different images for similar products
         product_images = {
             'laptop-asus-vivobook-15': 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&h=500&fit=crop',
             'iphone-14-pro': 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&h=500&fit=crop',
@@ -33,26 +32,21 @@ class Command(BaseCommand):
                     image_url = product_images[product.slug]
                     self.stdout.write(f'Downloading image for {product.name}...')
                     
-                    # Create request with user agent to avoid blocking
                     req = urllib.request.Request(
                         image_url,
                         headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
                     )
                     
-                    # Download image to temporary file
                     img_response = urllib.request.urlopen(req, timeout=15)
                     img_data = img_response.read()
                     
-                    # Create temporary file
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as img_temp:
                         img_temp.write(img_data)
                         temp_path = img_temp.name
                     
-                    # Save to product
                     with open(temp_path, 'rb') as f:
                         product.image.save(f"{product.slug}.jpg", File(f), save=True)
                     
-                    # Clean up
                     os.unlink(temp_path)
                     added_count += 1
                     self.stdout.write(self.style.SUCCESS(f'[OK] Image added to: {product.name}'))

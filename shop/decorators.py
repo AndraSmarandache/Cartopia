@@ -3,9 +3,6 @@ from django.core.exceptions import PermissionDenied
 
 
 def admin_required(function=None):
-    """
-    Decorator to check if user is admin (staff)
-    """
     actual_decorator = user_passes_test(
         lambda u: u.is_authenticated and u.is_staff,
         login_url='login'

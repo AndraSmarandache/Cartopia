@@ -2,7 +2,6 @@ from .models import Cart
 
 
 def cart_context(request):
-    """Add cart count and total to all templates"""
     if request.user.is_authenticated:
         cart_items = Cart.objects.filter(user=request.user)
         cart_count = sum(item.quantity for item in cart_items)

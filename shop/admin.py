@@ -6,7 +6,6 @@ from .models import (
     Cart, Wishlist, Order, OrderItem
 )
 
-# Customize admin site
 admin.site.site_header = "Cartopia Administration"
 admin.site.site_title = "Cartopia Admin"
 admin.site.index_title = "Welcome to Cartopia Administration"

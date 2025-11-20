@@ -13,7 +13,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write('Loading sample data...')
 
-        # Category images URLs
         category_images = {
             'electronice': 'https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=500&h=500&fit=crop',
             'laptopuri': 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&h=500&fit=crop',
@@ -22,7 +21,6 @@ class Command(BaseCommand):
             'gaming': 'https://images.unsplash.com/photo-1603302576837-3756b0720b18?w=500&h=500&fit=crop',
         }
 
-        # Create categories
         categories_data = [
             {'name': 'Electronics', 'slug': 'electronice', 'description': 'Electronic products and gadgets'},
             {'name': 'Laptops', 'slug': 'laptopuri', 'description': 'Laptops and computers'},
@@ -38,7 +36,6 @@ class Command(BaseCommand):
                 defaults=cat_data
             )
             
-            # Download and save category image
             if created and category.slug in category_images and not category.image:
                 try:
                     image_url = category_images[category.slug]
@@ -66,7 +63,6 @@ class Command(BaseCommand):
             
             categories[cat_data['slug']] = category
 
-        # Create suppliers
         suppliers_data = [
             {'name': 'TechSupplier Inc', 'contact_email': 'contact@techsupplier.com', 'phone': '+1-555-0123'},
             {'name': 'ElectroWorld', 'contact_email': 'info@electroworld.com', 'phone': '+1-555-0456'},
@@ -101,7 +97,6 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(self.style.SUCCESS(f'Delivery method created: {delivery.name}'))
 
-        # Creare produse
         products_data = [
             {
                 'name': 'Laptop ASUS VivoBook 15',
@@ -215,7 +210,6 @@ class Command(BaseCommand):
             },
         ]
 
-        # Product images URLs - using reliable image sources
         product_images = {
             'laptop-asus-vivobook-15': 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&h=500&fit=crop',
             'iphone-14-pro': 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&h=500&fit=crop',
@@ -235,7 +229,6 @@ class Command(BaseCommand):
                 defaults=prod_data
             )
             
-            # Download and save product image (for both new and existing products without images)
             if product.slug in product_images and not product.image:
                 try:
                     image_url = product_images[product.slug]
@@ -266,7 +259,6 @@ class Command(BaseCommand):
             elif created:
                 self.stdout.write(self.style.SUCCESS(f'Product created: {product.name}'))
 
-        # Create admin user if doesn't exist
         if not User.objects.filter(username='admin').exists():
             admin_user = User.objects.create_superuser(
                 username='admin',
@@ -275,11 +267,9 @@ class Command(BaseCommand):
                 first_name='Admin',
                 last_name='User'
             )
-            # Create profile for admin
             UserProfile.objects.get_or_create(user=admin_user)
             self.stdout.write(self.style.SUCCESS('Admin user created: admin / admin123'))
 
-        # Create normal test user
         if not User.objects.filter(username='testuser').exists():
             test_user = User.objects.create_user(
                 username='testuser',
@@ -288,7 +278,6 @@ class Command(BaseCommand):
                 first_name='Test',
                 last_name='User'
             )
-            # Create profile for test user
             UserProfile.objects.get_or_create(user=test_user)
             self.stdout.write(self.style.SUCCESS('Test user created: testuser / test123'))
 
