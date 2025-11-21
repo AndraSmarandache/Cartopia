@@ -8,7 +8,7 @@ import os
 
 
 class Command(BaseCommand):
-    help = 'Incarca date de test in baza de date'
+    help = 'Load sample data into the database'
 
     def handle(self, *args, **options):
         self.stdout.write('Loading sample data...')

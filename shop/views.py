@@ -6,6 +6,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib import messages
 from django.db.models import Q, Sum
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 from decimal import Decimal
 from .models import (
     Product, Category, Cart, Wishlist, Order, OrderItem,
@@ -18,9 +19,18 @@ from .decorators import admin_required
 def home(request):
     categories = Category.objects.all()[:6]
     featured_products = Product.objects.filter(is_active=True)[:8]
+    
+    wishlist_product_ids = set()
+    if request.user.is_authenticated:
+        wishlist_product_ids = set(
+            Wishlist.objects.filter(user=request.user)
+            .values_list('product_id', flat=True)
+        )
+    
     return render(request, 'shop/home.html', {
         'categories': categories,
         'featured_products': featured_products,
+        'wishlist_product_ids': wishlist_product_ids,
     })
 
 
@@ -93,11 +103,19 @@ def product_list(request):
     
     categories = Category.objects.all()
     
+    wishlist_product_ids = set()
+    if request.user.is_authenticated:
+        wishlist_product_ids = set(
+            Wishlist.objects.filter(user=request.user)
+            .values_list('product_id', flat=True)
+        )
+    
     return render(request, 'shop/product_list.html', {
         'page_obj': page_obj,
         'categories': categories,
         'selected_category': category_slug,
         'search_query': search_query,
+        'wishlist_product_ids': wishlist_product_ids,
     })
 
 
@@ -302,6 +320,14 @@ def wishlist_add(request, product_id):
         product=product
     )
     
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'added': created,
+            'in_wishlist': True,
+            'message': f'{product.name} has been added to wishlist!' if created else f'{product.name} is already in wishlist!'
+        })
+    
     if created:
         messages.success(request, f'{product.name} has been added to wishlist!')
     else:
@@ -320,6 +346,30 @@ def wishlist_remove(request, wishlist_id):
     wishlist_item.delete()
     messages.success(request, f'{product_name} has been removed from wishlist!')
     return redirect('wishlist')
+
+
+@login_required
+def wishlist_toggle(request, product_id):
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+    
+    product = get_object_or_404(Product, id=product_id, is_active=True)
+    wishlist_item = Wishlist.objects.filter(user=request.user, product=product).first()
+    
+    if wishlist_item:
+        wishlist_item.delete()
+        in_wishlist = False
+        message = f'{product.name} has been removed from wishlist!'
+    else:
+        Wishlist.objects.create(user=request.user, product=product)
+        in_wishlist = True
+        message = f'{product.name} has been added to wishlist!'
+    
+    return JsonResponse({
+        'success': True,
+        'in_wishlist': in_wishlist,
+        'message': message
+    })
 
 
 @login_required

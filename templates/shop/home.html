@@ -58,16 +58,25 @@
                     <h5 class="card-title">{{ product.name }}</h5>
                     <p class="card-text text-muted">{{ product.description|truncatewords:15 }}</p>
                     <p class="card-text"><strong class="text-primary fs-4">€{{ product.price }}</strong></p>
-                    <div class="btn-container" onclick="event.stopPropagation();">
+                    <div class="btn-container d-flex gap-2" onclick="event.stopPropagation();">
                         {% if user.is_authenticated and not user.is_staff %}
                             {% if product.is_in_stock %}
-                                <a href="{% url 'cart_add' product.id %}" class="btn btn-primary btn-sm w-100">
+                                <a href="{% url 'cart_add' product.id %}" class="btn btn-primary btn-sm flex-fill">
                                     <i class="bi bi-cart-plus"></i> Add to Cart
                                 </a>
                             {% else %}
-                                <a href="{% url 'product_detail' product.slug %}" class="btn btn-secondary btn-sm w-100">
+                                <a href="{% url 'product_detail' product.slug %}" class="btn btn-secondary btn-sm flex-fill">
                                     <i class="bi bi-eye"></i> View Details
                                 </a>
+                            {% endif %}
+                            {% if product.id in wishlist_product_ids %}
+                                <button type="button" class="btn btn-danger btn-sm wishlist-btn" data-product-id="{{ product.id }}" data-in-wishlist="true" title="Remove from Wishlist">
+                                    <i class="bi bi-heart-fill"></i>
+                                </button>
+                            {% else %}
+                                <button type="button" class="btn btn-outline-danger btn-sm wishlist-btn" data-product-id="{{ product.id }}" data-in-wishlist="false" title="Add to Wishlist">
+                                    <i class="bi bi-heart"></i>
+                                </button>
                             {% endif %}
                         {% else %}
                             <a href="{% url 'product_detail' product.slug %}" class="btn btn-primary btn-sm w-100">
@@ -85,4 +94,52 @@
     </div>
     {% endfor %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const wishlistButtons = document.querySelectorAll('.wishlist-btn');
+    
+    wishlistButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const productId = this.getAttribute('data-product-id');
+            const isInWishlist = this.getAttribute('data-in-wishlist') === 'true';
+            const button = this;
+            
+            fetch(`/wishlist/toggle/${productId}/`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.in_wishlist) {
+                        button.classList.remove('btn-outline-danger');
+                        button.classList.add('btn-danger');
+                        button.setAttribute('data-in-wishlist', 'true');
+                        button.setAttribute('title', 'Remove from Wishlist');
+                        button.querySelector('i').classList.remove('bi-heart');
+                        button.querySelector('i').classList.add('bi-heart-fill');
+                    } else {
+                        button.classList.remove('btn-danger');
+                        button.classList.add('btn-outline-danger');
+                        button.setAttribute('data-in-wishlist', 'false');
+                        button.setAttribute('title', 'Add to Wishlist');
+                        button.querySelector('i').classList.remove('bi-heart-fill');
+                        button.querySelector('i').classList.add('bi-heart');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+});
+</script>
 {% endblock %}
