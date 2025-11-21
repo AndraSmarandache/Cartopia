@@ -80,15 +80,73 @@
                         <h3 class="text-primary">{{ user.orders.count }}</h3>
                         <p class="text-muted">Total Orders</p>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <h3 class="text-primary">{{ user.wishlist.count }}</h3>
                         <p class="text-muted">Wishlist Items</p>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <h3 class="text-primary">{{ user.cart.count }}</h3>
                         <p class="text-muted">Cart Items</p>
                     </div>
+                    <div class="col-md-3">
+                        <h3 class="text-primary">{{ user_reviews.count }}</h3>
+                        <p class="text-muted">Reviews</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="text-primary">{{ avg_rating_given|floatformat:1 }}</h3>
+                        <p class="text-muted">Avg Rating Given</p>
+                    </div>
                 </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-lg border-0 mt-4">
+            <div class="card-header bg-gradient-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-star"></i> My Reviews</h5>
+            </div>
+            <div class="card-body">
+                {% if user_reviews %}
+                    <div class="reviews-list">
+                        {% for review in user_reviews %}
+                            <div class="card mb-3" style="background-color: #2c2c2c; border: 1px solid #444;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div class="flex-grow-1">
+                                            <h6 class="text-white mb-2">
+                                                <a href="{% url 'product_detail' review.product.slug %}" class="text-white text-decoration-none">
+                                                    {{ review.product.name }}
+                                                </a>
+                                            </h6>
+                                            <div class="text-warning mb-2">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= review.rating %}
+                                                        <i class="bi bi-star-fill"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ review.created_at|date:"F d, Y" }}</small>
+                                    </div>
+                                    <h6 class="text-white mb-2">{{ review.title }}</h6>
+                                    <p class="text-white mb-0">{{ review.comment|linebreaks }}</p>
+                                    {% if not review.is_approved %}
+                                        <span class="badge bg-warning text-dark mt-2">Pending Approval</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-star" style="font-size: 3rem; color: #888;"></i>
+                        <p class="text-muted mt-3">You haven't written any reviews yet.</p>
+                        <a href="{% url 'product_list' %}" class="btn btn-primary">
+                            <i class="bi bi-bag"></i> Browse Products
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

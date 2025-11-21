@@ -4,15 +4,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib import messages
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Avg
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from decimal import Decimal
 from .models import (
     Product, Category, Cart, Wishlist, Order, OrderItem,
-    DeliveryMethod
+    DeliveryMethod, Review
 )
-from .forms import UserRegistrationForm, ProductForm, CheckoutForm, UserProfileForm
+from .forms import UserRegistrationForm, ProductForm, CheckoutForm, UserProfileForm, ReviewForm
 from .decorators import admin_required
 
 
@@ -129,6 +129,8 @@ def product_detail(request, slug):
     in_wishlist = False
     in_cart = False
     cart_quantity = 0
+    user_review = None
+    can_review = False
     
     if request.user.is_authenticated:
         in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
@@ -136,6 +138,18 @@ def product_detail(request, slug):
         if cart_item:
             in_cart = True
             cart_quantity = cart_item.quantity
+        
+        user_review = Review.objects.filter(user=request.user, product=product).first()
+        has_ordered = Order.objects.filter(user=request.user, items__product=product).exists()
+        can_review = has_ordered and not user_review
+    
+    reviews = Review.objects.filter(product=product, is_approved=True).order_by('-created_at')
+    average_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+    rating_count = reviews.count()
+    
+    review_form = None
+    if request.user.is_authenticated and can_review:
+        review_form = ReviewForm()
     
     return render(request, 'shop/product_detail.html', {
         'product': product,
@@ -143,6 +157,12 @@ def product_detail(request, slug):
         'in_wishlist': in_wishlist,
         'in_cart': in_cart,
         'cart_quantity': cart_quantity,
+        'reviews': reviews,
+        'average_rating': average_rating,
+        'rating_count': rating_count,
+        'user_review': user_review,
+        'can_review': can_review,
+        'review_form': review_form,
     })
 
 
@@ -373,6 +393,35 @@ def wishlist_toggle(request, product_id):
 
 
 @login_required
+def review_add(request, product_id):
+    product = get_object_or_404(Product, id=product_id, is_active=True)
+    
+    existing_review = Review.objects.filter(user=request.user, product=product).first()
+    if existing_review:
+        messages.error(request, 'You have already reviewed this product.')
+        return redirect('product_detail', slug=product.slug)
+    
+    has_ordered = Order.objects.filter(user=request.user, items__product=product).exists()
+    if not has_ordered:
+        messages.error(request, 'You can only review products you have purchased.')
+        return redirect('product_detail', slug=product.slug)
+    
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.user = request.user
+            review.product = product
+            review.save()
+            messages.success(request, 'Your review has been submitted successfully!')
+            return redirect('product_detail', slug=product.slug)
+    else:
+        form = ReviewForm()
+    
+    return redirect('product_detail', slug=product.slug)
+
+
+@login_required
 def checkout(request):
     cart_items = Cart.objects.filter(user=request.user)
     
@@ -447,7 +496,13 @@ def order_detail(request, order_id):
 def profile(request):
     from .models import UserProfile
     profile_obj, created = UserProfile.objects.get_or_create(user=request.user)
-    return render(request, 'shop/profile.html', {'profile': profile_obj})
+    user_reviews = Review.objects.filter(user=request.user).order_by('-created_at')
+    avg_rating_given = user_reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+    return render(request, 'shop/profile.html', {
+        'profile': profile_obj,
+        'user_reviews': user_reviews,
+        'avg_rating_given': avg_rating_given,
+    })
 
 
 @login_required

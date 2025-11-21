@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 
 
@@ -189,4 +189,32 @@ class OrderItem(models.Model):
 
     def get_total_price(self):
         return self.price * self.quantity
+
+
+class Review(models.Model):
+    RATING_CHOICES = [
+        (1, '1 Star'),
+        (2, '2 Stars'),
+        (3, '3 Stars'),
+        (4, '4 Stars'),
+        (5, '5 Stars'),
+    ]
+    
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews', verbose_name="Product")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews', verbose_name="User")
+    rating = models.IntegerField(choices=RATING_CHOICES, validators=[MinValueValidator(1), MaxValueValidator(5)], verbose_name="Rating")
+    title = models.CharField(max_length=200, verbose_name="Review Title")
+    comment = models.TextField(verbose_name="Comment")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
+    is_approved = models.BooleanField(default=True, verbose_name="Approved")
+    
+    class Meta:
+        verbose_name = "Review"
+        verbose_name_plural = "Reviews"
+        ordering = ['-created_at']
+        unique_together = ['user', 'product']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.product.name} ({self.rating} stars)"
 

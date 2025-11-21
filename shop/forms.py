@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit
-from .models import Product, Order, DeliveryMethod, UserProfile
+from .models import Product, Order, DeliveryMethod, UserProfile, Review
 
 
 class UserRegistrationForm(UserCreationForm):
@@ -139,5 +139,26 @@ class UserProfileForm(forms.ModelForm):
             ),
             'bio',
             Submit('submit', 'Update Profile', css_class='btn btn-primary')
+        )
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'title', 'comment']
+        widgets = {
+            'rating': forms.Select(choices=Review.RATING_CHOICES, attrs={'class': 'form-select'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Review title'}),
+            'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Write your review...'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            'rating',
+            'title',
+            'comment',
+            Submit('submit', 'Submit Review', css_class='btn btn-primary')
         )
 
