@@ -36,7 +36,7 @@
                             <span class="badge bg-danger text-white">{{ order.get_status_display }}</span>
                         {% endif %}
                     </td>
-                    <td style="color: #1a1a1a;"><strong>${{ order.total_price }}</strong></td>
+                    <td style="color: #1a1a1a;"><strong>€{{ order.total_price }}</strong></td>
                     <td>
                         <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-primary">View Details</a>
                     </td>

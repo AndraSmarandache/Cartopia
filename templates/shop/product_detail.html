@@ -26,7 +26,7 @@
     
     <div class="col-md-6">
         <h1 class="mb-3">{{ product.name }}</h1>
-        <h3 class="text-primary mb-4">${{ product.price }}</h3>
+        <h3 class="text-primary mb-4">€{{ product.price }}</h3>
         
         <div class="mb-3">
             {% if product.is_in_stock %}
@@ -51,7 +51,7 @@
         <div class="mb-3">
             <strong>Delivery Method:</strong> {{ product.delivery_method.name }}
             {% if product.delivery_method.cost > 0 %}
-                (${{ product.delivery_method.cost }})
+                (€{{ product.delivery_method.cost }})
             {% endif %}
         </div>
         {% endif %}
@@ -109,7 +109,7 @@
                 {% endif %}
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">{{ related.name }}</h5>
-                    <p class="card-text"><strong class="text-primary">${{ related.price }}</strong></p>
+                    <p class="card-text"><strong class="text-primary">€{{ related.price }}</strong></p>
                     <div class="btn-container">
                         <a href="{% url 'product_detail' related.slug %}" class="btn btn-primary btn-sm w-100">View Details</a>
                     </div>

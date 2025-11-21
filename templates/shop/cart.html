@@ -36,14 +36,14 @@
                                     </div>
                                 </div>
                             </td>
-                            <td>${{ item.product.price }}</td>
+                            <td>€{{ item.product.price }}</td>
                             <td>
                                 <form method="post" action="{% url 'cart_update' item.id %}" class="d-inline">
                                     {% csrf_token %}
                                     <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" class="form-control form-control-sm cart-quantity-input" style="width: 80px; display: inline-block;" onchange="this.form.submit()">
                                 </form>
                             </td>
-                            <td><strong>${{ item.get_total_price }}</strong></td>
+                            <td><strong>€{{ item.get_total_price }}</strong></td>
                             <td>
                                 <a href="{% url 'cart_remove' item.id %}" class="btn btn-danger btn-sm">
                                     <i class="bi bi-trash"></i>
@@ -63,9 +63,9 @@
                 <h5 class="mb-0">Order Summary</h5>
             </div>
             <div class="card-body">
-                <p><strong>Subtotal:</strong> ${{ total }}</p>
+                <p><strong>Subtotal:</strong> €{{ total }}</p>
                 <hr>
-                <h5>Total: ${{ total }}</h5>
+                <h5>Total: €{{ total }}</h5>
                 <a href="{% url 'checkout' %}" class="btn btn-success btn-lg w-100 mt-3">
                     <i class="bi bi-credit-card"></i> Proceed to Checkout
                 </a>

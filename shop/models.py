@@ -9,6 +9,14 @@ class UserProfile(models.Model):
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True, verbose_name="Profile Picture")
     bio = models.TextField(blank=True, max_length=500, verbose_name="Bio")
     
+    phone = models.CharField(max_length=20, blank=True, verbose_name="Phone Number")
+    address = models.TextField(blank=True, verbose_name="Address")
+    city = models.CharField(max_length=100, blank=True, verbose_name="City")
+    postal_code = models.CharField(max_length=20, blank=True, verbose_name="Postal Code")
+    country = models.CharField(max_length=100, blank=True, default='Romania', verbose_name="Country")
+    
+    date_of_birth = models.DateField(blank=True, null=True, verbose_name="Date of Birth")
+    
     class Meta:
         verbose_name = "User Profile"
         verbose_name_plural = "User Profiles"

@@ -37,13 +37,13 @@
                         <tr>
                             <td>{{ item.product.name }}</td>
                             <td>{{ item.quantity }}</td>
-                            <td>${{ item.get_total_price }}</td>
+                            <td>€{{ item.get_total_price }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
                 <hr>
-                <p><strong>Subtotal:</strong> ${{ total }}</p>
+                <p><strong>Subtotal:</strong> €{{ total }}</p>
                 <p class="text-muted"><small>Delivery cost will be added after selecting delivery method</small></p>
             </div>
         </div>

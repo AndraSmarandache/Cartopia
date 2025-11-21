@@ -104,12 +104,14 @@ class UserProfileForm(forms.ModelForm):
     first_name = forms.CharField(max_length=30, required=True, label="First Name")
     last_name = forms.CharField(max_length=30, required=True, label="Last Name")
     email = forms.EmailField(required=True, label="Email")
+    date_of_birth = forms.DateField(required=False, label="Date of Birth", widget=forms.DateInput(attrs={'type': 'date'}))
     
     class Meta:
         model = UserProfile
-        fields = ['profile_picture', 'bio']
+        fields = ['profile_picture', 'bio', 'phone', 'address', 'city', 'postal_code', 'country', 'date_of_birth']
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 4}),
+            'address': forms.Textarea(attrs={'rows': 3}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -127,6 +129,14 @@ class UserProfileForm(forms.ModelForm):
                 Column('last_name', css_class='form-group col-md-6 mb-0'),
             ),
             'email',
+            'phone',
+            'date_of_birth',
+            'address',
+            Row(
+                Column('city', css_class='form-group col-md-6 mb-0'),
+                Column('postal_code', css_class='form-group col-md-4 mb-0'),
+                Column('country', css_class='form-group col-md-2 mb-0'),
+            ),
             'bio',
             Submit('submit', 'Update Profile', css_class='btn btn-primary')
         )

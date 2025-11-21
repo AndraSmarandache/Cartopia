@@ -146,7 +146,6 @@
         margin-right: 8px;
     }
     
-    /* Style Django admin content */
     #content {
         background: #1a1a1a;
     }
@@ -201,7 +200,6 @@
         color: #8b5cf6;
     }
     
-    /* All tables in Django admin */
     #result_list, .results table, table {
         background: #e0e0e0 !important;
     }
@@ -259,6 +257,214 @@
     
     .button.default:hover, input[type="submit"].default:hover {
         background: #7c3aed;
+    }
+    
+    label, .field-label, .required {
+        color: #e0e0e0 !important;
+    }
+    
+    label.required::after {
+        color: #dc3545 !important;
+    }
+    
+    .form-row p, .form-row div, .form-row span,
+    .field-box p, .field-box div, .field-box span,
+    p.help, .help, .help-text, .help-block {
+        color: #b0b0b0 !important;
+    }
+    
+    fieldset {
+        background: #2c2c2c !important;
+        border: 1px solid #444 !important;
+    }
+    
+    fieldset legend {
+        background: #8b5cf6 !important;
+        color: #fff !important;
+        padding: 5px 15px;
+        border-radius: 4px;
+    }
+    
+    .form-row {
+        color: #e0e0e0 !important;
+    }
+    
+    .form-row label {
+        color: #e0e0e0 !important;
+    }
+    
+    .vLargeTextField, .vTextField, .vIntegerField {
+        background: #2c2c2c !important;
+        border: 1px solid #444 !important;
+        color: #e0e0e0 !important;
+    }
+    
+    .vLargeTextField:focus, .vTextField:focus, .vIntegerField:focus {
+        background: #333 !important;
+        border-color: #6366f1 !important;
+        color: #fff !important;
+    }
+    
+    .readonly {
+        color: #b0b0b0 !important;
+        background: #1a1a1a !important;
+    }
+    
+    .file-upload {
+        color: #e0e0e0 !important;
+    }
+    
+    .file-upload a {
+        color: #6366f1 !important;
+    }
+    
+    .file-upload a:hover {
+        color: #8b5cf6 !important;
+    }
+    
+    .checkbox-row label {
+        color: #e0e0e0 !important;
+    }
+    
+    input[type="checkbox"], input[type="radio"] {
+        accent-color: #8b5cf6;
+    }
+    
+    .selector {
+        color: #e0e0e0 !important;
+    }
+    
+    .selector .selector-available, .selector .selector-chosen {
+        background: #2c2c2c !important;
+        border: 1px solid #444 !important;
+    }
+    
+    .selector .selector-available h2, .selector .selector-chosen h2 {
+        background: #8b5cf6 !important;
+        color: #fff !important;
+    }
+    
+    .selector select {
+        background: #1a1a1a !important;
+        color: #e0e0e0 !important;
+    }
+    
+    .related-lookup {
+        color: #6366f1 !important;
+    }
+    
+    .related-lookup:hover {
+        color: #8b5cf6 !important;
+    }
+    
+    .addlink, .changelink, .deletelink {
+        color: #6366f1 !important;
+    }
+    
+    .addlink:hover, .changelink:hover {
+        color: #8b5cf6 !important;
+    }
+    
+    .deletelink:hover {
+        color: #dc3545 !important;
+    }
+    
+    .inline-group {
+        background: #2c2c2c !important;
+        border: 1px solid #444 !important;
+    }
+    
+    .inline-group h2 {
+        background: #8b5cf6 !important;
+        color: #fff !important;
+    }
+    
+    .inline-related {
+        background: #2c2c2c !important;
+        border: 1px solid #444 !important;
+    }
+    
+    .inline-related h3 {
+        background: #3c3c3c !important;
+        color: #e0e0e0 !important;
+    }
+    
+    .inline-related .form-row {
+        background: transparent !important;
+    }
+    
+    .errorlist {
+        background: rgba(220, 53, 69, 0.2) !important;
+        border: 1px solid #dc3545 !important;
+        color: #ff6b6b !important;
+    }
+    
+    .errorlist li {
+        color: #ff6b6b !important;
+    }
+    
+    .errornote {
+        background: rgba(220, 53, 69, 0.2) !important;
+        border: 1px solid #dc3545 !important;
+        color: #ff6b6b !important;
+    }
+    
+    .success {
+        background: rgba(40, 167, 69, 0.2) !important;
+        border: 1px solid #28a745 !important;
+        color: #6cff8f !important;
+    }
+    
+    .warning {
+        background: rgba(255, 193, 7, 0.2) !important;
+        border: 1px solid #ffc107 !important;
+        color: #ffd54f !important;
+    }
+    
+    .info {
+        background: rgba(23, 162, 184, 0.2) !important;
+        border: 1px solid #17a2b8 !important;
+        color: #5bc0de !important;
+    }
+    
+    ul.messagelist li {
+        color: #e0e0e0 !important;
+    }
+    
+    .object-tools {
+        background: transparent !important;
+    }
+    
+    .object-tools a {
+        background: #8b5cf6 !important;
+        color: #fff !important;
+    }
+    
+    .object-tools a:hover {
+        background: #7c3aed !important;
+    }
+    
+    .submit-row {
+        background: #2c2c2c !important;
+        border-top: 1px solid #444 !important;
+    }
+    
+    .submit-row input, .submit-row button {
+        background: #8b5cf6 !important;
+        color: #fff !important;
+    }
+    
+    .submit-row input:hover, .submit-row button:hover {
+        background: #7c3aed !important;
+    }
+    
+    .deletelink-box {
+        background: rgba(220, 53, 69, 0.1) !important;
+        border: 1px solid #dc3545 !important;
+    }
+    
+    .deletelink-box a {
+        color: #dc3545 !important;
     }
 </style>
 {% endblock %}
