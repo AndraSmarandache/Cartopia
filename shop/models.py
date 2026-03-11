@@ -175,7 +175,7 @@ class Order(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Comanda #{self.id} - {self.user.username}"
+        return f"Order #{self.id} - {self.user.username}"
 
     def get_products_total(self):
         return self.total_price - self.delivery_cost

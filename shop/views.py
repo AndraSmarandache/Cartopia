@@ -14,6 +14,7 @@ from .models import (
 )
 from .forms import UserRegistrationForm, ProductForm, CheckoutForm, UserProfileForm, ReviewForm
 from .decorators import admin_required
+from .pdf_utils import generate_and_attach_pdf
 
 
 def home(request):
@@ -215,6 +216,18 @@ def product_edit(request, slug):
         'product': product,
         'title': 'Edit Product'
     })
+
+
+@admin_required
+def product_generate_pdf(request, slug):
+    product = get_object_or_404(Product, slug=slug)
+    if request.method == 'POST':
+        try:
+            generate_and_attach_pdf(product)
+            messages.success(request, f'Specification PDF generated for "{product.name}".')
+        except Exception as e:
+            messages.error(request, f'Could not generate PDF: {e}')
+    return redirect('product_edit', slug=slug)
 
 
 @admin_required

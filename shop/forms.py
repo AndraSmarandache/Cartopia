@@ -43,8 +43,11 @@ class ProductForm(forms.ModelForm):
             'category', 'supplier', 'delivery_method', 'image', 'descriptive_pdf', 'is_active'
         ]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 4}),
-            'specifications': forms.Textarea(attrs={'rows': 6}),
+            'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
+            'specifications': forms.Textarea(attrs={'rows': 6, 'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'supplier': forms.Select(attrs={'class': 'form-select'}),
+            'delivery_method': forms.Select(attrs={'class': 'form-select'}),
         }
 
     def clean_descriptive_pdf(self):

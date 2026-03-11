@@ -1,10 +1,12 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
+from django.contrib import messages
 from .models import (
     UserProfile, Category, Supplier, DeliveryMethod, Product, ProductImage,
     Cart, Wishlist, Order, OrderItem, Review
 )
+from .pdf_utils import generate_and_attach_pdf
 
 admin.site.site_header = "Cartopia Administration"
 admin.site.site_title = "Cartopia Admin"
@@ -45,11 +47,24 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
     inlines = [ProductImageInline]
+    actions = ['generate_specification_pdf']
 
     def has_descriptive_pdf(self, obj):
         return bool(obj.descriptive_pdf)
     has_descriptive_pdf.boolean = True
     has_descriptive_pdf.short_description = 'PDF'
+
+    @admin.action(description='Generate specification PDF')
+    def generate_specification_pdf(self, request, queryset):
+        count = 0
+        for product in queryset:
+            try:
+                generate_and_attach_pdf(product)
+                count += 1
+            except Exception as e:
+                self.message_user(request, f'Error for "{product.name}": {e}', level=messages.ERROR)
+        if count:
+            self.message_user(request, f'Generated specification PDF for {count} product(s).', level=messages.SUCCESS)
 
 
 @admin.register(Cart)

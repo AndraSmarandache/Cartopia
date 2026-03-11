@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
 
 {% block title %}{{ title }} - Admin{% endblock %}
 
@@ -10,7 +9,88 @@
     <div class="col-md-10">
         <div class="card shadow-sm">
             <div class="card-body">
-                {% crispy form %}
+                <form method="post" action="" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label">Name</label>
+                        <input type="text" name="name" value="{{ form.name.value|default:'' }}" class="form-control" id="id_name" required>
+                        {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_slug" class="form-label">Slug</label>
+                        <input type="text" name="slug" value="{{ form.slug.value|default:'' }}" class="form-control" id="id_slug">
+                        {% if form.slug.errors %}<div class="invalid-feedback d-block">{{ form.slug.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Description</label>
+                        <textarea name="description" class="form-control" id="id_description" rows="4">{{ form.description.value|default:'' }}</textarea>
+                        {% if form.description.errors %}<div class="invalid-feedback d-block">{{ form.description.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_specifications" class="form-label">Specifications</label>
+                        <textarea name="specifications" class="form-control" id="id_specifications" rows="6">{{ form.specifications.value|default:'' }}</textarea>
+                        {% if form.specifications.errors %}<div class="invalid-feedback d-block">{{ form.specifications.errors }}</div>{% endif %}
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_price" class="form-label">Price</label>
+                            <input type="number" name="price" value="{{ form.price.value|default:'' }}" step="0.01" class="form-control" id="id_price" required>
+                            {% if form.price.errors %}<div class="invalid-feedback d-block">{{ form.price.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_stock" class="form-label">Stock</label>
+                            <input type="number" name="stock" value="{{ form.stock.value|default:'' }}" class="form-control" id="id_stock" min="0">
+                            {% if form.stock.errors %}<div class="invalid-feedback d-block">{{ form.stock.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="id_category" class="form-label">Category</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}<div class="invalid-feedback d-block">{{ form.category.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="id_supplier" class="form-label">Supplier</label>
+                            {{ form.supplier }}
+                            {% if form.supplier.errors %}<div class="invalid-feedback d-block">{{ form.supplier.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="id_delivery_method" class="form-label">Delivery Method</label>
+                            {{ form.delivery_method }}
+                            {% if form.delivery_method.errors %}<div class="invalid-feedback d-block">{{ form.delivery_method.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_image" class="form-label">Main Image</label>
+                        <input type="file" name="image" class="form-control" id="id_image" accept="image/*">
+                        {% if product and product.image %}<p class="small text-muted mt-1">Current: <a href="{{ product.image.url }}" target="_blank">{{ product.image.name }}</a></p>{% endif %}
+                        {% if form.image.errors %}<div class="invalid-feedback d-block">{{ form.image.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_descriptive_pdf" class="form-label">Descriptive document (PDF)</label>
+                        <input type="file" name="descriptive_pdf" class="form-control" id="id_descriptive_pdf" accept=".pdf">
+                        {% if product and product.descriptive_pdf %}<p class="small text-muted mt-1">Current: <a href="{{ product.descriptive_pdf.url }}" target="_blank">PDF</a></p>{% endif %}
+                        {% if form.descriptive_pdf.errors %}<div class="invalid-feedback d-block">{{ form.descriptive_pdf.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="is_active" class="form-check-input" id="id_is_active" {% if form.is_active.value %}checked{% endif %}>
+                        <label class="form-check-label" for="id_is_active">Active</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+                {% if product %}
+                <hr class="my-3">
+                <p class="text-muted small mb-2">Generate a PDF with product description and specifications.</p>
+                <form method="post" action="{% url 'product_generate_pdf' product.slug %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-file-earmark-pdf"></i> Generate specifications file (PDF)
+                    </button>
+                </form>
+                {% endif %}
             </div>
         </div>
     </div>
