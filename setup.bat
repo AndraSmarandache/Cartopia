@@ -47,6 +47,11 @@ echo.
 echo To start the application, run:
 echo   python manage.py runserver
 echo.
+echo To run at a different address (e.g. port 8080 or 0.0.0.0 for LAN access):
+echo   set RUN_PORT=8080
+echo   run.bat
+echo   Or: python manage.py runserver 0.0.0.0:8080
+echo.
 echo Test credentials:
 echo   Admin: admin / admin123
 echo   User: testuser / test123

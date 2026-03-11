@@ -78,6 +78,13 @@ class Product(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True, related_name='products', verbose_name="Supplier")
     delivery_method = models.ForeignKey(DeliveryMethod, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Delivery Method")
     image = models.ImageField(upload_to='products/', blank=True, null=True, verbose_name="Main Image")
+    descriptive_pdf = models.FileField(
+        upload_to='products/pdfs/',
+        blank=True,
+        null=True,
+        verbose_name="Descriptive document (PDF)",
+        help_text="PDF document with product details and specifications",
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
     is_active = models.BooleanField(default=True, verbose_name="Active")

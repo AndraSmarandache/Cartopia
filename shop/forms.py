@@ -40,12 +40,18 @@ class ProductForm(forms.ModelForm):
         model = Product
         fields = [
             'name', 'slug', 'description', 'specifications', 'price', 'stock',
-            'category', 'supplier', 'delivery_method', 'image', 'is_active'
+            'category', 'supplier', 'delivery_method', 'image', 'descriptive_pdf', 'is_active'
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
             'specifications': forms.Textarea(attrs={'rows': 6}),
         }
+
+    def clean_descriptive_pdf(self):
+        value = self.cleaned_data.get('descriptive_pdf')
+        if value and not value.name.lower().endswith('.pdf'):
+            raise forms.ValidationError('Only PDF files are allowed for the descriptive document.')
+        return value
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,6 +71,7 @@ class ProductForm(forms.ModelForm):
                 Column('delivery_method', css_class='form-group col-md-4 mb-0'),
             ),
             'image',
+            'descriptive_pdf',
             'is_active',
             Submit('submit', 'Save', css_class='btn btn-primary')
         )

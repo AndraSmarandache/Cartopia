@@ -40,11 +40,16 @@ class ProductImageInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'price', 'stock', 'is_active', 'created_at']
+    list_display = ['name', 'category', 'price', 'stock', 'has_descriptive_pdf', 'is_active', 'created_at']
     list_filter = ['category', 'is_active', 'created_at']
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
     inlines = [ProductImageInline]
+
+    def has_descriptive_pdf(self, obj):
+        return bool(obj.descriptive_pdf)
+    has_descriptive_pdf.boolean = True
+    has_descriptive_pdf.short_description = 'PDF'
 
 
 @admin.register(Cart)

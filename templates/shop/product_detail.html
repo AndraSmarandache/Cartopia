@@ -66,6 +66,14 @@
         <h5>Specifications</h5>
         <p class="text-muted">{{ product.specifications|linebreaks }}</p>
         
+        {% if product.descriptive_pdf %}
+        <hr>
+        <h5>Descriptive document</h5>
+        <a href="{{ product.descriptive_pdf.url }}" target="_blank" rel="noopener" class="btn btn-outline-primary">
+            <i class="bi bi-file-earmark-pdf"></i> Download product details (PDF)
+        </a>
+        {% endif %}
+        
         <hr>
         
         <div class="d-flex gap-2">
