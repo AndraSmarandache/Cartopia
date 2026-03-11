@@ -3,14 +3,81 @@
 {% block title %}Home - Cartopia{% endblock %}
 
 {% block content %}
-<div class="jumbotron p-5 rounded mb-5 shadow-lg border-0" style="background: #8b5cf6; color: white; border: 1px solid var(--border-color);">
+<div class="d-flex justify-content-end mb-3">
+    <form method="get" action="{% url 'home' %}" class="d-flex gap-2 align-items-center home-search-form">
+        <input type="text" name="q" class="form-control home-search-input" placeholder="Search products by name..." value="{{ search_query }}" autofocus>
+        <button type="submit" class="btn btn-primary btn-lg home-search-btn">
+            <i class="bi bi-search"></i> Search
+        </button>
+    </form>
+</div>
+<style>
+.home-search-form .home-search-input { width: 300px; height: 2.6rem; padding: 0.35rem 0.6rem; background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); font-size: 1rem; }
+.home-search-form .home-search-input::placeholder { color: var(--text-muted); }
+.home-search-form .home-search-input:focus { background: transparent; border-color: var(--text-muted); color: var(--text-primary); box-shadow: none; }
+</style>
+
+<div class="jumbotron p-5 rounded mb-4 shadow-lg border-0" style="background: #8b5cf6; color: white; border: 1px solid var(--border-color);">
     <h1 class="display-4 fw-bold">Welcome to Cartopia</h1>
-    <p class="lead">Browse products and services below, grouped by category. Each item has a short description and link to full details.</p>
-    <a class="btn btn-light btn-lg mt-3" href="{% url 'product_list' %}" role="button" style="box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+    <p class="lead">Browse products by category below, or search by name.</p>
+    <a class="btn btn-outline-light btn-lg mt-2" href="{% url 'product_list' %}" role="button">
         <i class="bi bi-bag"></i> View all products
     </a>
 </div>
 
+{% if search_results is not None %}
+<section class="mb-5">
+    <h2 class="mb-3">Search results{% if search_query %} for "{{ search_query }}"{% endif %}</h2>
+    {% if search_results %}
+    <p class="text-muted mb-3">{{ search_results|length }} product(s) found (ranked by BM25).</p>
+    <div class="row">
+        {% for product in search_results %}
+        <div class="col-md-4 col-lg-3 mb-4">
+            <div class="product-card-wrapper">
+                <div class="card product-card shadow-sm h-100" onclick="window.location.href='{% url 'product_detail' product.slug %}'" style="cursor: pointer;">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center product-image" style="background: var(--bg-darker);">
+                        <i class="bi bi-image" style="font-size: 4rem; color: var(--text-muted);"></i>
+                    </div>
+                    {% endif %}
+                    {% if product.is_in_stock %}
+                    <span class="badge bg-success badge-stock">In Stock</span>
+                    {% else %}
+                    <span class="badge bg-danger badge-stock">Out of Stock</span>
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text text-muted small flex-grow-1">{{ product.description|truncatewords:20 }}</p>
+                        <p class="card-text mb-2"><strong style="color: #dc3545;">€{{ product.price }}</strong></p>
+                        <div class="btn-container d-flex gap-2" onclick="event.stopPropagation();">
+                            {% if user.is_authenticated and not user.is_staff %}
+                            {% if product.is_in_stock %}
+                            <a href="{% url 'cart_add' product.id %}" class="btn btn-primary btn-sm flex-fill"><i class="bi bi-cart-plus"></i> Add to Cart</a>
+                            {% else %}
+                            <a href="{% url 'product_detail' product.slug %}" class="btn btn-secondary btn-sm flex-fill"><i class="bi bi-eye"></i> View</a>
+                            {% endif %}
+                            {% if product.id in wishlist_product_ids %}
+                            <button type="button" class="btn btn-danger btn-sm wishlist-btn" data-product-id="{{ product.id }}" data-in-wishlist="true" title="Remove from Wishlist"><i class="bi bi-heart-fill"></i></button>
+                            {% else %}
+                            <button type="button" class="btn btn-outline-danger btn-sm wishlist-btn" data-product-id="{{ product.id }}" data-in-wishlist="false" title="Add to Wishlist"><i class="bi bi-heart"></i></button>
+                            {% endif %}
+                            {% else %}
+                            <a href="{% url 'product_detail' product.slug %}" class="btn btn-primary btn-sm w-100"><i class="bi bi-eye"></i> View details</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">No products found with that search. Try different words or <a href="{% url 'home' %}">view all categories</a>.</p>
+    {% endif %}
+</section>
+{% else %}
 {% for category in categories %}
 <section class="mb-5">
     <h2 class="mb-3">{{ category.name }}</h2>
@@ -69,6 +136,7 @@
 {% empty %}
 <p class="text-muted">No categories or products available.</p>
 {% endfor %}
+{% endif %}
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

@@ -3,21 +3,25 @@
 {% block title %}Products - Cartopia{% endblock %}
 
 {% block content %}
+<style>
+.categories-sidebar .card { background: var(--bg-card); border: 1px solid var(--border-color); }
+.categories-sidebar .card-header { background: transparent; border-bottom: 1px solid var(--border-color); color: var(--text-primary); }
+.categories-sidebar .cat-link { display: block; padding: 0.6rem 1rem; color: var(--text-primary); text-decoration: none; border-bottom: 1px solid var(--border-color); transition: background 0.15s; }
+.categories-sidebar .cat-link:last-child { border-bottom: none; }
+.categories-sidebar .cat-link:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+.categories-sidebar .cat-link.active { background: var(--accent-secondary); color: white; }
+.categories-sidebar .cat-link.active:hover { background: var(--accent-hover); color: white; }
+</style>
 <div class="row">
     <div class="col-md-3">
-        <div class="card shadow-sm">
-            <div class="card-header bg-gradient-primary text-white">
+        <div class="card shadow-sm categories-sidebar">
+            <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-list-ul"></i> Categories</h5>
             </div>
-            <div class="list-group list-group-flush">
-                <a href="{% url 'product_list' %}" class="list-group-item list-group-item-action {% if not selected_category %}active{% endif %}">
-                    All Categories
-                </a>
+            <div class="card-body p-0">
+                <a href="{% url 'product_list' %}" class="cat-link {% if not selected_category %}active{% endif %}">All Categories</a>
                 {% for category in categories %}
-                <a href="{% url 'product_list' %}?category={{ category.slug }}" 
-                   class="list-group-item list-group-item-action {% if selected_category == category.slug %}active{% endif %}">
-                    {{ category.name }}
-                </a>
+                <a href="{% url 'product_list' %}?category={{ category.slug }}" class="cat-link {% if selected_category == category.slug %}active{% endif %}">{{ category.name }}</a>
                 {% endfor %}
             </div>
         </div>
@@ -25,8 +29,9 @@
     
     <div class="col-md-9">
         <div class="mb-4">
-            <form method="get" class="d-flex">
-                <input type="text" name="search" class="form-control me-2" placeholder="Search products..." value="{{ search_query }}">
+            <form method="get" class="d-flex gap-2">
+                {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+                <input type="text" name="search" class="form-control" style="max-width: 320px;" placeholder="Search products..." value="{{ search_query|default:'' }}">
                 <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Search</button>
             </form>
         </div>

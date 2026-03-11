@@ -15,40 +15,55 @@ from .models import (
 from .forms import UserRegistrationForm, ProductForm, CheckoutForm, UserProfileForm, ReviewForm
 from .decorators import admin_required
 from .pdf_utils import generate_and_attach_pdf
+from .search_utils import search_products_bm25
 
 
 def home(request):
-    categories = Category.objects.filter(
-        products__is_active=True
-    ).distinct().order_by('name').prefetch_related(
-        Prefetch('products', queryset=Product.objects.filter(is_active=True).order_by('name'))
-    )
+    search_query = request.GET.get('q', '').strip() # get the search query from the url
     wishlist_product_ids = set()
     if request.user.is_authenticated:
         wishlist_product_ids = set(
-            Wishlist.objects.filter(user=request.user)
-            .values_list('product_id', flat=True)
+            Wishlist.objects.filter(user=request.user) # get the wishlist items for the user
+            .values_list('product_id', flat=True) # get the product ids from the wishlist items
         )
-    return render(request, 'shop/home.html', {
+
+    if search_query: # if there is a search query, search for products
+        products = list(Product.objects.filter(is_active=True))
+        search_results = search_products_bm25(products, search_query)
+        return render(request, 'shop/home.html', { # render the home page with the search results
+            'categories': [],
+            'wishlist_product_ids': wishlist_product_ids,
+            'search_query': search_query,
+            'search_results': search_results,
+        })
+    # if there is no search query, get the categories and the featured products
+    categories = Category.objects.filter(
+        products__is_active=True 
+    ).distinct().order_by('name').prefetch_related(
+        Prefetch('products', queryset=Product.objects.filter(is_active=True).order_by('name')) 
+    )
+    return render(request, 'shop/home.html', { # render the home page with the categories and the featured products
         'categories': categories,
         'wishlist_product_ids': wishlist_product_ids,
+        'search_query': '',
+        'search_results': None,
     })
 
 
-def register(request):
+def register(request): 
     if request.user.is_authenticated:
         return redirect('home')
     
-    if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
+    if request.method == 'POST': # if the request method is post (user submitted the form), process the form
+        form = UserRegistrationForm(request.POST) # create a new form with the data from the request
         if form.is_valid():
-            user = form.save()
+            user = form.save() # save the user to the database
             username = form.cleaned_data.get('username')
             messages.success(request, f'Account for {username} has been created successfully!')
-            login(request, user)
+            login(request, user) # login the user
             return redirect('home')
     else:
-        form = UserRegistrationForm()
+        form = UserRegistrationForm() # if the request method is not post, create a new form
     return render(request, 'shop/register.html', {'form': form})
 
 
@@ -85,21 +100,20 @@ class CustomLogoutView(LogoutView):
 def product_list(request):
     products = Product.objects.filter(is_active=True)
     category_slug = request.GET.get('category')
-    search_query = request.GET.get('search')
+    search_query = request.GET.get('search') or ''
     
     if category_slug:
         category = get_object_or_404(Category, slug=category_slug)
         products = products.filter(category=category)
     
-    if search_query:
-        products = products.filter(
-            Q(name__icontains=search_query) |
-            Q(description__icontains=search_query) |
-            Q(specifications__icontains=search_query)
-        )
+    if search_query: # if there is a search query, search for products
+        products = list(products)
+        products = search_products_bm25(products, search_query)
+    else: # if there is no search query, get the products by name
+        products = list(products.order_by('name'))
     
-    paginator = Paginator(products, 12)
-    page_number = request.GET.get('page')
+    paginator = Paginator(products, 12) # create a new paginator with 12 products per page
+    page_number = request.GET.get('page') 
     page_obj = paginator.get_page(page_number)
     
     categories = Category.objects.all()
@@ -111,7 +125,7 @@ def product_list(request):
             .values_list('product_id', flat=True)
         )
     
-    return render(request, 'shop/product_list.html', {
+    return render(request, 'shop/product_list.html', { 
         'page_obj': page_obj,
         'categories': categories,
         'selected_category': category_slug,
