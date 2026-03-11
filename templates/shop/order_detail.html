@@ -1,8 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}Order #{{ order.id }} - E-Commerce{% endblock %}
+{% block title %}Order #{{ order.id }} - Cartopia{% endblock %}
 
 {% block content %}
+<style>
+.order-table-wrap th,
+.order-table-wrap td,
+.order-table-wrap strong { color: #212529 !important; }
+.order-table-wrap a { color: #0d6efd !important; }
+.order-table-wrap a:hover { color: #0a58ca !important; }
+.order-detail-card .card-body { color: #212529 !important; }
+.order-detail-card .card-body p,
+.order-detail-card .card-body h4 { color: #212529 !important; }
+</style>
 <h2 class="mb-4"><i class="bi bi-receipt"></i> Order #{{ order.id }}</h2>
 
 <div class="row">
@@ -11,8 +21,8 @@
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">Ordered Products</h5>
             </div>
-            <div class="card-body">
-                <table class="table">
+            <div class="card-body text-dark order-table-wrap order-detail-card">
+                <table class="table table-light">
                     <thead>
                         <tr>
                             <th>Product</th>
@@ -24,7 +34,7 @@
                     <tbody>
                         {% for item in order.items.all %}
                         <tr>
-                            <td>{{ item.product.name }}</td>
+                            <td><a href="{% url 'product_detail' item.product.slug %}">{{ item.product.name }}</a></td>
                             <td>{{ item.quantity }}</td>
                             <td>€{{ item.price }}</td>
                             <td><strong>€{{ item.get_total_price }}</strong></td>
@@ -39,7 +49,7 @@
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">Delivery Information</h5>
             </div>
-            <div class="card-body">
+            <div class="card-body text-dark order-detail-card">
                 <p><strong>Name:</strong> {{ order.first_name }} {{ order.last_name }}</p>
                 <p><strong>Email:</strong> {{ order.email }}</p>
                 <p><strong>Phone:</strong> {{ order.phone }}</p>
@@ -58,7 +68,7 @@
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">Order Summary</h5>
             </div>
-            <div class="card-body">
+            <div class="card-body text-dark order-detail-card">
                 <p><strong>Status:</strong> 
                     {% if order.status == 'pending' %}
                         <span class="badge bg-warning">{{ order.get_status_display }}</span>

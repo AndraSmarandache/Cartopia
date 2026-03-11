@@ -25,7 +25,7 @@
                 {% endif %}
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">{{ item.product.name }}</h5>
-                    <p class="card-text"><strong class="text-primary fs-4">€{{ item.product.price }}</strong></p>
+                    <p class="card-text"><strong class="fs-4" style="color: #dc3545;">€{{ item.product.price }}</strong></p>
                     <div class="btn-container d-flex gap-2" onclick="event.stopPropagation();">
                         <a href="{% url 'product_detail' item.product.slug %}" class="btn btn-primary btn-sm flex-fill">View Details</a>
                         <a href="{% url 'wishlist_remove' item.id %}" class="btn btn-danger btn-sm">

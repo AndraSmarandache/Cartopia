@@ -51,7 +51,7 @@
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">{{ product.name }}</h5>
                             <p class="card-text text-muted">{{ product.description|truncatewords:15 }}</p>
-                            <p class="card-text"><strong class="text-primary fs-4">€{{ product.price }}</strong></p>
+                            <p class="card-text"><strong class="fs-4" style="color: #dc3545;">€{{ product.price }}</strong></p>
                             <div class="btn-container d-flex gap-2" onclick="event.stopPropagation();">
                                 {% if user.is_authenticated and not user.is_staff %}
                                     {% if product.is_in_stock %}
