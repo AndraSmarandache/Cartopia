@@ -4,140 +4,96 @@
 
 {% block content %}
 <div class="jumbotron p-5 rounded mb-5 shadow-lg border-0" style="background: #8b5cf6; color: white; border: 1px solid var(--border-color);">
-    <h1 class="display-4 fw-bold">Welcome to Cartopia!</h1>
-    <p class="lead">Your Shopping Utopia - Discover a wide range of quality products at competitive prices.</p>
+    <h1 class="display-4 fw-bold">Welcome to Cartopia</h1>
+    <p class="lead">Browse products and services below, grouped by category. Each item has a short description and link to full details.</p>
     <a class="btn btn-light btn-lg mt-3" href="{% url 'product_list' %}" role="button" style="box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-        <i class="bi bi-bag"></i> Browse Products
+        <i class="bi bi-bag"></i> View all products
     </a>
 </div>
 
-<h2 class="mb-4"><i class="bi bi-grid"></i> Categories</h2>
-<div class="row mb-5">
-    {% for category in categories %}
-    <div class="col-md-4 mb-3">
-        <div class="card category-card shadow-sm">
-            {% if category.image %}
-                <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}" style="height: 200px; object-fit: cover;">
-            {% else %}
-                <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 200px; background: var(--bg-darker);">
-                    <i class="bi bi-folder" style="font-size: 3rem; color: var(--text-muted);"></i>
-                </div>
-            {% endif %}
-            <div class="card-body">
-                <h5 class="card-title">{{ category.name }}</h5>
-                <a href="{% url 'product_list' %}?category={{ category.slug }}" class="btn btn-primary">View Products</a>
-            </div>
-        </div>
-    </div>
-    {% empty %}
-    <div class="col-12">
-        <p class="text-muted">No categories available.</p>
-    </div>
-    {% endfor %}
-</div>
-
-<h2 class="mb-4"><i class="bi bi-star"></i> Featured Products</h2>
-<div class="row">
-    {% for product in featured_products %}
-    <div class="col-md-3 mb-4">
-        <div class="product-card-wrapper">
-            <div class="card product-card shadow-sm" onclick="window.location.href='{% url 'product_detail' product.slug %}'" style="cursor: pointer;">
-                {% if product.image %}
+{% for category in categories %}
+<section class="mb-5">
+    <h2 class="mb-3">{{ category.name }}</h2>
+    {% if category.description %}
+    <p class="text-muted mb-3">{{ category.description }}</p>
+    {% endif %}
+    <div class="row">
+        {% for product in category.products.all %}
+        <div class="col-md-4 col-lg-3 mb-4">
+            <div class="product-card-wrapper">
+                <div class="card product-card shadow-sm h-100" onclick="window.location.href='{% url 'product_detail' product.slug %}'" style="cursor: pointer;">
+                    {% if product.image %}
                     <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
-                {% else %}
+                    {% else %}
                     <div class="card-img-top d-flex align-items-center justify-content-center product-image" style="background: var(--bg-darker);">
                         <i class="bi bi-image" style="font-size: 4rem; color: var(--text-muted);"></i>
                     </div>
-                {% endif %}
-                {% if product.is_in_stock %}
+                    {% endif %}
+                    {% if product.is_in_stock %}
                     <span class="badge bg-success badge-stock">In Stock</span>
-                {% else %}
+                    {% else %}
                     <span class="badge bg-danger badge-stock">Out of Stock</span>
-                {% endif %}
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">{{ product.name }}</h5>
-                    <p class="card-text text-muted">{{ product.description|truncatewords:15 }}</p>
-                    <p class="card-text"><strong class="text-primary fs-4">€{{ product.price }}</strong></p>
-                    <div class="btn-container d-flex gap-2" onclick="event.stopPropagation();">
-                        {% if user.is_authenticated and not user.is_staff %}
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text text-muted small flex-grow-1">{{ product.description|truncatewords:20 }}</p>
+                        <p class="card-text mb-2"><strong class="text-primary">€{{ product.price }}</strong></p>
+                        <div class="btn-container d-flex gap-2" onclick="event.stopPropagation();">
+                            {% if user.is_authenticated and not user.is_staff %}
                             {% if product.is_in_stock %}
-                                <a href="{% url 'cart_add' product.id %}" class="btn btn-primary btn-sm flex-fill">
-                                    <i class="bi bi-cart-plus"></i> Add to Cart
-                                </a>
+                            <a href="{% url 'cart_add' product.id %}" class="btn btn-primary btn-sm flex-fill"><i class="bi bi-cart-plus"></i> Add to Cart</a>
                             {% else %}
-                                <a href="{% url 'product_detail' product.slug %}" class="btn btn-secondary btn-sm flex-fill">
-                                    <i class="bi bi-eye"></i> View Details
-                                </a>
+                            <a href="{% url 'product_detail' product.slug %}" class="btn btn-secondary btn-sm flex-fill"><i class="bi bi-eye"></i> View</a>
                             {% endif %}
                             {% if product.id in wishlist_product_ids %}
-                                <button type="button" class="btn btn-danger btn-sm wishlist-btn" data-product-id="{{ product.id }}" data-in-wishlist="true" title="Remove from Wishlist">
-                                    <i class="bi bi-heart-fill"></i>
-                                </button>
+                            <button type="button" class="btn btn-danger btn-sm wishlist-btn" data-product-id="{{ product.id }}" data-in-wishlist="true" title="Remove from Wishlist"><i class="bi bi-heart-fill"></i></button>
                             {% else %}
-                                <button type="button" class="btn btn-outline-danger btn-sm wishlist-btn" data-product-id="{{ product.id }}" data-in-wishlist="false" title="Add to Wishlist">
-                                    <i class="bi bi-heart"></i>
-                                </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm wishlist-btn" data-product-id="{{ product.id }}" data-in-wishlist="false" title="Add to Wishlist"><i class="bi bi-heart"></i></button>
                             {% endif %}
-                        {% else %}
-                            <a href="{% url 'product_detail' product.slug %}" class="btn btn-primary btn-sm w-100">
-                                <i class="bi bi-eye"></i> View Details
-                            </a>
-                        {% endif %}
+                            {% else %}
+                            <a href="{% url 'product_detail' product.slug %}" class="btn btn-primary btn-sm w-100"><i class="bi bi-eye"></i> View details</a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-muted">No products in this category.</p>
+        </div>
+        {% endfor %}
     </div>
-    {% empty %}
-    <div class="col-12">
-        <p class="text-muted">No products available.</p>
-    </div>
-    {% endfor %}
-</div>
+    <hr class="my-4">
+</section>
+{% empty %}
+<p class="text-muted">No categories or products available.</p>
+{% endfor %}
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const wishlistButtons = document.querySelectorAll('.wishlist-btn');
-    
-    wishlistButtons.forEach(button => {
+    var wishlistButtons = document.querySelectorAll('.wishlist-btn');
+    wishlistButtons.forEach(function(button) {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
-            const productId = this.getAttribute('data-product-id');
-            const isInWishlist = this.getAttribute('data-in-wishlist') === 'true';
-            const button = this;
-            
-            fetch(`/wishlist/toggle/${productId}/`, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (data.in_wishlist) {
-                        button.classList.remove('btn-outline-danger');
-                        button.classList.add('btn-danger');
-                        button.setAttribute('data-in-wishlist', 'true');
-                        button.setAttribute('title', 'Remove from Wishlist');
-                        button.querySelector('i').classList.remove('bi-heart');
-                        button.querySelector('i').classList.add('bi-heart-fill');
-                    } else {
-                        button.classList.remove('btn-danger');
-                        button.classList.add('btn-outline-danger');
-                        button.setAttribute('data-in-wishlist', 'false');
-                        button.setAttribute('title', 'Add to Wishlist');
-                        button.querySelector('i').classList.remove('bi-heart-fill');
-                        button.querySelector('i').classList.add('bi-heart');
+            var productId = this.getAttribute('data-product-id');
+            var button = this;
+            fetch('/wishlist/toggle/' + productId + '/', { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        if (data.in_wishlist) {
+                            button.classList.remove('btn-outline-danger'); button.classList.add('btn-danger');
+                            button.setAttribute('data-in-wishlist', 'true'); button.setAttribute('title', 'Remove from Wishlist');
+                            button.querySelector('i').classList.remove('bi-heart'); button.querySelector('i').classList.add('bi-heart-fill');
+                        } else {
+                            button.classList.remove('btn-danger'); button.classList.add('btn-outline-danger');
+                            button.setAttribute('data-in-wishlist', 'false'); button.setAttribute('title', 'Add to Wishlist');
+                            button.querySelector('i').classList.remove('bi-heart-fill'); button.querySelector('i').classList.add('bi-heart');
+                        }
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+                });
         });
     });
 });

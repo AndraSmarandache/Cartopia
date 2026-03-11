@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
 
-{% block title %}Checkout - E-Commerce{% endblock %}
+{% block title %}Checkout - Cartopia{% endblock %}
 
 {% block content %}
 <h2 class="mb-4"><i class="bi bi-credit-card"></i> Checkout</h2>
@@ -13,11 +12,63 @@
                 <h5 class="mb-0">Delivery Information</h5>
             </div>
             <div class="card-body">
-                {% crispy form %}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_first_name" class="form-label">First name</label>
+                            <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}" class="form-control" id="id_first_name" required>
+                            {% if form.first_name.errors %}<div class="invalid-feedback d-block">{{ form.first_name.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_last_name" class="form-label">Last name</label>
+                            <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" class="form-control" id="id_last_name" required>
+                            {% if form.last_name.errors %}<div class="invalid-feedback d-block">{{ form.last_name.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_email" class="form-label">Email</label>
+                            <input type="email" name="email" value="{{ form.email.value|default:'' }}" class="form-control" id="id_email" required>
+                            {% if form.email.errors %}<div class="invalid-feedback d-block">{{ form.email.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_phone" class="form-label">Phone</label>
+                            <input type="text" name="phone" value="{{ form.phone.value|default:'' }}" class="form-control" id="id_phone" required>
+                            {% if form.phone.errors %}<div class="invalid-feedback d-block">{{ form.phone.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_address" class="form-label">Address</label>
+                        <textarea name="address" class="form-control" id="id_address" rows="3" required>{{ form.address.value|default:'' }}</textarea>
+                        {% if form.address.errors %}<div class="invalid-feedback d-block">{{ form.address.errors }}</div>{% endif %}
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_city" class="form-label">City</label>
+                            <input type="text" name="city" value="{{ form.city.value|default:'' }}" class="form-control" id="id_city" required>
+                            {% if form.city.errors %}<div class="invalid-feedback d-block">{{ form.city.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_postal_code" class="form-label">Postal code</label>
+                            <input type="text" name="postal_code" value="{{ form.postal_code.value|default:'' }}" class="form-control" id="id_postal_code" required>
+                            {% if form.postal_code.errors %}<div class="invalid-feedback d-block">{{ form.postal_code.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_delivery_method" class="form-label">Delivery method</label>
+                        {{ form.delivery_method }}
+                        {% if form.delivery_method.errors %}<div class="invalid-feedback d-block">{{ form.delivery_method.errors }}</div>{% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-success btn-lg">Complete Order</button>
+                </form>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">

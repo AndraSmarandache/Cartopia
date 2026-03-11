@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib import messages
-from django.db.models import Q, Sum, Avg
+from django.db.models import Q, Sum, Avg, Prefetch
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from decimal import Decimal
@@ -18,19 +18,19 @@ from .pdf_utils import generate_and_attach_pdf
 
 
 def home(request):
-    categories = Category.objects.all()[:6]
-    featured_products = Product.objects.filter(is_active=True)[:8]
-    
+    categories = Category.objects.filter(
+        products__is_active=True
+    ).distinct().order_by('name').prefetch_related(
+        Prefetch('products', queryset=Product.objects.filter(is_active=True).order_by('name'))
+    )
     wishlist_product_ids = set()
     if request.user.is_authenticated:
         wishlist_product_ids = set(
             Wishlist.objects.filter(user=request.user)
             .values_list('product_id', flat=True)
         )
-    
     return render(request, 'shop/home.html', {
         'categories': categories,
-        'featured_products': featured_products,
         'wishlist_product_ids': wishlist_product_ids,
     })
 

@@ -87,6 +87,9 @@ class CheckoutForm(forms.ModelForm):
             'first_name', 'last_name', 'email', 'phone',
             'address', 'city', 'postal_code', 'delivery_method'
         ]
+        widgets = {
+            'delivery_method': forms.Select(attrs={'class': 'form-select'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
