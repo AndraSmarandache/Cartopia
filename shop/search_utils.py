@@ -69,11 +69,34 @@ def bm25_score(query_terms, product_id, doc_lengths, term_freqs, doc_freq, N, av
     return score
 
 
-def search_products_bm25(products, query_string):
+def _substring_tf_df(products, query_terms): 
     """
-    Search products by title using BM25 (simplified).
-    Returns list of (product, score) for products that have at least one query term in the title,
-    sorted by score descending.
+    Substring matching for the BM25 score (used for the search)
+    It's an improvement over the exact term match because it allows partial matches
+    For example, "lap" matches "laptop"
+    """
+    doc_lengths = {}
+    term_freqs = defaultdict(lambda: defaultdict(int))
+    doc_freq = defaultdict(int)
+
+    for p in products:
+        terms = tokenize(p.name) 
+        doc_lengths[p.id] = len(terms)
+        for q in query_terms: # iterate over the query terms
+            count = sum(1 for t in terms if q in t) # count the number of times the query term is in the product name
+            if count > 0:
+                term_freqs[p.id][q] = count # frequency of the query term in the product
+                doc_freq[q] += 1 # document frequency for the query term
+
+    N = len(products)
+    avgdl = sum(doc_lengths.values()) / N if N else 0
+    return doc_lengths, term_freqs, doc_freq, N, avgdl
+
+
+def search_products_bm25(products, query_string, substring_matching=False):
+    """
+    Search products by title using BM25 (simplified) or substring matching
+    Returns a list of products that have at least one query term in the title, sorted by score descending
     """
     if not products or not query_string or not query_string.strip():
         return []
@@ -82,13 +105,17 @@ def search_products_bm25(products, query_string):
     if not query_terms:
         return []
 
-    doc_lengths, term_freqs, doc_freq, N, avgdl = build_index(products)
+    if substring_matching:
+        doc_lengths, term_freqs, doc_freq, N, avgdl = _substring_tf_df(products, query_terms)
+    else:
+        doc_lengths, term_freqs, doc_freq, N, avgdl = build_index(products)
+
     product_by_id = {p.id: p for p in products} # dictionary of products by id
 
-    scored = []
+    scored = [] # list of products and their scores
     for pid in doc_lengths: # iterate over the products
-        # check if the product contains any of the query terms
-        if any(term_freqs.get(pid, {}).get(t, 0) > 0 for t in query_terms):
+        # check if the product has at least one query term in the title
+        if any(term_freqs.get(pid, {}).get(q, 0) > 0 for q in query_terms): 
             s = bm25_score(query_terms, pid, doc_lengths, term_freqs, doc_freq, N, avgdl) # calculate the score for the product
             if s > 0:
                 scored.append((product_by_id[pid], s))

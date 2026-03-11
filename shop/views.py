@@ -29,7 +29,7 @@ def home(request):
 
     if search_query: # if there is a search query, search for products
         products = list(Product.objects.filter(is_active=True))
-        search_results = search_products_bm25(products, search_query)
+        search_results = search_products_bm25(products, search_query, substring_matching=True)
         return render(request, 'shop/home.html', { # render the home page with the search results
             'categories': [],
             'wishlist_product_ids': wishlist_product_ids,
@@ -108,7 +108,7 @@ def product_list(request):
     
     if search_query: # if there is a search query, search for products
         products = list(products)
-        products = search_products_bm25(products, search_query)
+        products = search_products_bm25(products, search_query, substring_matching=True)
     else: # if there is no search query, get the products by name
         products = list(products.order_by('name'))
     
