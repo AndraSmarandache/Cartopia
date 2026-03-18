@@ -3,18 +3,30 @@
 {% block title %}Home - Cartopia{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-end mb-3">
-    <form method="get" action="{% url 'home' %}" class="d-flex gap-2 align-items-center home-search-form">
-        <input type="text" name="q" class="form-control home-search-input" placeholder="Search products by name..." value="{{ search_query }}" autofocus>
+<div class="d-flex justify-content-end mb-3 position-relative">
+    <form method="get" action="{% url 'home' %}" class="d-flex gap-2 align-items-center home-search-form" id="home-search-form">
+        <div class="position-relative home-search-input-wrap">
+            <span id="autocomplete-ghost" class="autocomplete-ghost" aria-hidden="true"></span>
+            <span id="autocomplete-measure" class="autocomplete-measure" aria-hidden="true"></span>
+            <input type="text" name="q" id="home-search-input" class="form-control home-search-input" placeholder="Search products by name..." value="{{ search_query }}" autocomplete="off" autofocus>
+            <div id="autocomplete-dropdown" class="autocomplete-dropdown" style="display: none;"></div>
+        </div>
         <button type="submit" class="btn btn-primary btn-lg home-search-btn">
             <i class="bi bi-search"></i> Search
         </button>
     </form>
 </div>
 <style>
+.home-search-input-wrap { display: inline-block; }
 .home-search-form .home-search-input { width: 300px; height: 2.6rem; padding: 0.35rem 0.6rem; background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); font-size: 1rem; }
 .home-search-form .home-search-input::placeholder { color: var(--text-muted); }
 .home-search-form .home-search-input:focus { background: transparent; border-color: var(--text-muted); color: var(--text-primary); box-shadow: none; }
+.autocomplete-ghost { position: absolute; left: 0; top: 0; height: 2.6rem; padding: 0 0.6rem; font-size: 1rem; color: #888; pointer-events: none; white-space: pre; overflow: hidden; max-width: 300px; box-sizing: border-box; display: flex; align-items: center; }
+.autocomplete-measure { position: absolute; visibility: hidden; white-space: pre; font-size: 1rem; height: 0; overflow: hidden; }
+.autocomplete-dropdown { position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; max-height: 320px; overflow-y: auto; background: #383838; border: 1px solid #555; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 1050; }
+.autocomplete-dropdown a { display: block; padding: 0.55rem 0.75rem; color: #e8e8e8; text-decoration: none; border-bottom: 1px solid #444; transition: background 0.12s ease; }
+.autocomplete-dropdown a:last-child { border-bottom: none; }
+.autocomplete-dropdown a:hover, .autocomplete-dropdown a.autocomplete-item-active { background: rgba(99, 102, 241, 0.25); color: #fff; }
 </style>
 
 <div class="jumbotron p-5 rounded mb-4 shadow-lg border-0" style="background: #8b5cf6; color: white; border: 1px solid var(--border-color);">
@@ -140,6 +152,135 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Search bar autocomplete (trie-based suggestions)
+    // Fetches GET /api/autocomplete/?q=... (min 2 chars, no space). Shows: (1) gray inline
+    // completion after cursor (first/selected suggestion), (2) dropdown list. Tab/Right
+    // accepts completion; ArrowUp/Down change selection; Enter opens product. Space hides all.
+    var autocompleteUrl = '{% url "autocomplete_api" %}';
+    var productBaseUrl = '{% url "product_list" %}'.replace(/\/$/, '') + '/';
+    var input = document.getElementById('home-search-input');
+    var dropdown = document.getElementById('autocomplete-dropdown');
+    var ghost = document.getElementById('autocomplete-ghost');
+    var measure = document.getElementById('autocomplete-measure');
+    var debounceTimer;
+    var selectedIndex = -1;
+    var currentSuggestions = [];
+    function hideDropdown() {
+        dropdown.style.display = 'none';
+        dropdown.innerHTML = '';
+        selectedIndex = -1;
+        currentSuggestions = [];
+        if (ghost) ghost.textContent = '';
+    }
+    function getDropdownLinks() { return dropdown.querySelectorAll('a[href]'); }
+    function setActiveItem(index) {
+        var links = getDropdownLinks();
+        selectedIndex = index;
+        if (index < 0) selectedIndex = -1;
+        if (index >= links.length) selectedIndex = links.length - 1;
+        if (selectedIndex < 0) selectedIndex = 0;
+        links.forEach(function(link, i) {
+            link.classList.toggle('autocomplete-item-active', i === selectedIndex);
+        });
+        updateGhost();
+    }
+    function updateGhost() {
+        if (!ghost || !measure) return;
+        var raw = input.value || '';
+        if (raw.indexOf(' ') !== -1) { ghost.textContent = ''; return; }
+        var q = raw.trim();
+        if (!currentSuggestions.length || !q) { ghost.textContent = ''; return; }
+        var idx = selectedIndex >= 0 && selectedIndex < currentSuggestions.length ? selectedIndex : 0;
+        var suggestion = currentSuggestions[idx];
+        var title = (suggestion && suggestion.title) ? suggestion.title : '';
+        if (!title || title.toLowerCase().indexOf(q.toLowerCase()) !== 0) { ghost.textContent = ''; return; }
+        var completion = title.slice(q.length);
+        ghost.textContent = completion;
+        var inputStyle = window.getComputedStyle(input);
+        ghost.style.font = inputStyle.font;
+        measure.style.font = inputStyle.font;
+        measure.textContent = input.value;
+        var padLeft = parseFloat(inputStyle.paddingLeft) || 0;
+        ghost.style.left = (padLeft + measure.offsetWidth) + 'px';
+        ghost.style.paddingLeft = '0';
+        ghost.style.height = input.offsetHeight + 'px';
+        ghost.style.paddingTop = inputStyle.paddingTop;
+        ghost.style.paddingBottom = inputStyle.paddingBottom;
+        ghost.style.paddingRight = inputStyle.paddingRight;
+    }
+    function showSuggestions(suggestions) {
+        if (!suggestions.length) { hideDropdown(); return; }
+        currentSuggestions = suggestions;
+        dropdown.innerHTML = suggestions.map(function(s) {
+            var title = (s.title || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+            return '<a href="' + productBaseUrl + s.slug + '/">' + title + '</a>';
+        }).join('');
+        dropdown.style.display = 'block';
+        setActiveItem(0);
+        updateGhost();
+    }
+    if (input && dropdown) {
+        input.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            var raw = input.value || '';
+            if (raw.indexOf(' ') !== -1) { hideDropdown(); updateGhost(); return; }
+            updateGhost();
+            var q = raw.trim();
+            if (q.length < 2) { hideDropdown(); return; }
+            debounceTimer = setTimeout(function() {
+                fetch(autocompleteUrl + '?q=' + encodeURIComponent(q), { credentials: 'same-origin' })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) { showSuggestions(data.suggestions || []); })
+                    .catch(function() { hideDropdown(); });
+            }, 200);
+        });
+        input.addEventListener('keydown', function(e) {
+            var links = getDropdownLinks();
+            if (e.key === 'Tab' || e.key === 'ArrowRight') {
+                if (currentSuggestions.length && ghost && ghost.textContent) {
+                    var q = (input.value || '').trim();
+                    var idx = selectedIndex >= 0 && selectedIndex < currentSuggestions.length ? selectedIndex : 0;
+                    var sel = currentSuggestions[idx];
+                    var title = (sel && sel.title) ? sel.title : '';
+                    if (title && title.toLowerCase().indexOf(q.toLowerCase()) === 0) {
+                        e.preventDefault();
+                        input.value = title;
+                        ghost.textContent = '';
+                        return;
+                    }
+                }
+            }
+            if (!links.length || dropdown.style.display === 'none') return;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActiveItem(selectedIndex + 1);
+                return;
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActiveItem(selectedIndex - 1);
+                return;
+            }
+            if (e.key === 'Enter' && selectedIndex >= 0 && links[selectedIndex]) {
+                e.preventDefault();
+                window.location.href = links[selectedIndex].href;
+                return;
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                hideDropdown();
+            }
+        });
+        input.addEventListener('blur', function() { setTimeout(hideDropdown, 180); });
+        input.addEventListener('focus', function() {
+            var q = (input.value || '').trim();
+            if (q.length >= 2 && dropdown.innerHTML) { dropdown.style.display = 'block'; setActiveItem(0); updateGhost(); }
+        });
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target) && !dropdown.contains(e.target)) hideDropdown();
+        });
+    }
+
     var wishlistButtons = document.querySelectorAll('.wishlist-btn');
     wishlistButtons.forEach(function(button) {
         button.addEventListener('click', function(e) {

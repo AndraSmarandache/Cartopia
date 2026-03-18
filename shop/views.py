@@ -16,7 +16,8 @@ from .forms import UserRegistrationForm, ProductForm, CheckoutForm, UserProfileF
 from .decorators import admin_required
 from .pdf_utils import generate_and_attach_pdf
 from .search_utils import search_products_bm25
-
+from .autocomplete import get_suggestions
+from .similarity import get_similar_products
 
 def home(request):
     search_query = request.GET.get('q', '').strip() # get the search query from the url
@@ -134,12 +135,24 @@ def product_list(request):
     })
 
 
+def autocomplete_api(request):
+    """
+    JSON API for search bar autocomplete. GET ?q=lap -> {suggestions: [{id, title, slug}, ...]}.
+    Uses a trie over product titles so we only return products whose name starts with q.
+    """
+    q = (request.GET.get('q') or '').strip()[:80]
+    if not q:
+        return JsonResponse({'suggestions': []})
+    products = list(Product.objects.filter(is_active=True))
+    suggestions = get_suggestions(products, q, limit=8)
+    return JsonResponse({'suggestions': suggestions})
+
+
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug, is_active=True)
-    related_products = Product.objects.filter(
-        category=product.category,
-        is_active=True
-    ).exclude(id=product.id)[:4]
+    # Similar products by text similarity (TF-IDF + cosine), not by category
+    all_active = list(Product.objects.filter(is_active=True))
+    related_products = get_similar_products(product, all_active, top_k=4)
     
     in_wishlist = False
     in_cart = False
