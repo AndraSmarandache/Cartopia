@@ -1,9 +1,36 @@
 """
 BM25 (simplified) search over product titles.
+Supports: exact terms, substring matching (e.g. "lap" in "laptop"),
+and Levenshtein (fuzzy) for typo tolerance.
 """
-import re # regular expressions
+import re
 import math
-from collections import defaultdict # defaultdict is a dictionary that will return a default value for a key that is not found
+from collections import defaultdict
+
+
+def levenshtein_distance(a, b):
+    """
+    Edit distance between two strings (insert, delete, substitute).
+    Used for fuzzy search: e.g. "laptp" matches "laptop".
+    """
+    if not a:
+        return len(b)
+    if not b:
+        return len(a)
+    # dynamic programming: dp[i][j] = distance for a[:i], b[:j]
+    n, m = len(a), len(b)
+    prev = list(range(m + 1))  # row 0: distance from "" to b[:j]
+    for i in range(1, n + 1):
+        curr = [i]
+        for j in range(1, m + 1):
+            cost = 0 if a[i - 1] == b[j - 1] else 1  # substitute cost
+            curr.append(min(
+                prev[j] + 1,      # delete a[i-1]
+                curr[j - 1] + 1,  # insert b[j-1]
+                prev[j - 1] + cost,  # substitute or match
+            ))
+        prev = curr
+    return prev[m]
 
 
 def tokenize(text):
@@ -69,31 +96,66 @@ def bm25_score(query_terms, product_id, doc_lengths, term_freqs, doc_freq, N, av
     return score
 
 
-def _substring_tf_df(products, query_terms): 
+def _substring_tf_df(products, query_terms):
     """
-    Substring matching for the BM25 score (used for the search)
-    It's an improvement over the exact term match because it allows partial matches
-    For example, "lap" matches "laptop"
+    Substring matching for the BM25 score (used for the search).
+    It's an improvement over the exact term match because it allows partial matches.
+    For example, "lap" matches "laptop".
     """
     doc_lengths = {}
     term_freqs = defaultdict(lambda: defaultdict(int))
     doc_freq = defaultdict(int)
 
     for p in products:
-        terms = tokenize(p.name) 
+        terms = tokenize(p.name)
         doc_lengths[p.id] = len(terms)
-        for q in query_terms: # iterate over the query terms
-            count = sum(1 for t in terms if q in t) # count the number of times the query term is in the product name
+        for q in query_terms:  # iterate over the query terms
+            count = sum(1 for t in terms if q in t)  # count how many product terms contain the query term as substring
             if count > 0:
-                term_freqs[p.id][q] = count # frequency of the query term in the product
-                doc_freq[q] += 1 # document frequency for the query term
+                term_freqs[p.id][q] = count  # frequency of the query term in the product
+                doc_freq[q] += 1  # document frequency for the query term
 
     N = len(products)
     avgdl = sum(doc_lengths.values()) / N if N else 0
     return doc_lengths, term_freqs, doc_freq, N, avgdl
 
 
-def search_products_bm25(products, query_string, substring_matching=False):
+def _substring_and_fuzzy_tf_df(products, query_terms, max_levenshtein=2):
+    """
+    Substring + Levenshtein fuzzy: a product term matches query term q if
+    - q is a substring of the term (e.g. "lap" in "laptop"), or
+    - Levenshtein distance <= max_levenshtein (typo tolerance), only when query term
+      has length >= 3 and product term length is close to query length
+    """
+    doc_lengths = {}
+    term_freqs = defaultdict(lambda: defaultdict(int))
+    doc_freq = defaultdict(int)
+
+    for p in products:
+        terms = tokenize(p.name)
+        doc_lengths[p.id] = len(terms)
+        for q in query_terms:
+            count = 0
+            for t in terms:
+                if q in t:
+                    # substring match: e.g. "lap" in "laptop"
+                    count += 1
+                elif max_levenshtein and len(q) >= 3 and len(t) >= 2:
+                    # fuzzy only for longer query terms and similar-length product terms (avoid false matches)
+                    if abs(len(t) - len(q)) <= max_levenshtein:
+                        d = levenshtein_distance(q, t)
+                        if d <= max_levenshtein:
+                            count += 1  # typo tolerance: e.g. "laptp" matches "laptop"
+            if count > 0:
+                term_freqs[p.id][q] = count
+                doc_freq[q] += 1
+
+    N = len(products)
+    avgdl = sum(doc_lengths.values()) / N if N else 0
+    return doc_lengths, term_freqs, doc_freq, N, avgdl
+
+
+def search_products_bm25(products, query_string, substring_matching=False, fuzzy_typo=True, max_levenshtein=2):
     """
     Search products by title using BM25 (simplified) or substring matching
     Returns a list of products that have at least one query term in the title, sorted by score descending
@@ -105,8 +167,14 @@ def search_products_bm25(products, query_string, substring_matching=False):
     if not query_terms:
         return []
 
+    # choose index: exact terms, substring only, or substring + Levenshtein fuzzy
     if substring_matching:
-        doc_lengths, term_freqs, doc_freq, N, avgdl = _substring_tf_df(products, query_terms)
+        if fuzzy_typo and max_levenshtein:
+            doc_lengths, term_freqs, doc_freq, N, avgdl = _substring_and_fuzzy_tf_df(
+                products, query_terms, max_levenshtein=max_levenshtein
+            )
+        else:
+            doc_lengths, term_freqs, doc_freq, N, avgdl = _substring_tf_df(products, query_terms)
     else:
         doc_lengths, term_freqs, doc_freq, N, avgdl = build_index(products)
 
