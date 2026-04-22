@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Specification Search - Cartopia{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="mb-3">Advanced specification search</h2>
+        <form method="get" action="{% url 'specification_search' %}" class="row g-2 align-items-end">
+            <div class="col-md-7">
+                <label for="spec-query" class="form-label">Specification text</label>
+                <input id="spec-query" type="text" name="q" value="{{ query }}" class="form-control" placeholder="Example: resolution 1900x1200">
+            </div>
+            <div class="col-md-3">
+                <label for="score-order" class="form-label">Sort by Lucene score</label>
+                <select id="score-order" name="score_order" class="form-select">
+                    <option value="desc" {% if score_order == 'desc' %}selected{% endif %}>Descending</option>
+                    <option value="asc" {% if score_order == 'asc' %}selected{% endif %}>Ascending</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mb-4">
+    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#lucene-info" aria-expanded="false" aria-controls="lucene-info">
+        <i class="bi bi-info-circle"></i> Show Lucene scoring info
+    </button>
+</div>
+
+<div class="collapse mb-4" id="lucene-info">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="mb-2">How Lucene score works</h5>
+            <p class="mb-2 text-muted">{{ lucene_scoring_note }}</p>
+            <ul class="mb-0 text-muted">
+                <li>Higher score means the specification is a better match</li>
+                <li>Descending sort puts the best matches first</li>
+                <li>Ascending sort puts the weaker matches first</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% if query %}
+    <div class="mb-3">
+        <strong>{{ results|length }}</strong> result(s) for <strong>{{ query }}</strong>
+    </div>
+    {% if results %}
+        <div class="row">
+            {% for item in results %}
+                {% with product=item.product %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="{% url 'product_detail' product.slug %}" class="text-decoration-none">{{ product.name }}</a>
+                            </h5>
+                            <p class="text-muted mb-2">Lucene score: {{ item.score|floatformat:5 }}</p>
+                            <p class="mb-0">{{ product.specifications|truncatewords:35 }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endwith %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">No specification documents matched this query</div>
+    {% endif %}
+{% endif %}
+{% endblock %}

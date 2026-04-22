@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('search/specifications/', views.specification_search, name='specification_search'),
     path('api/autocomplete/', views.autocomplete_api, name='autocomplete_api'),
     path('register/', views.register, name='register'),
     path('login/', views.CustomLoginView.as_view(), name='login'),

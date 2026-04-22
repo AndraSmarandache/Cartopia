@@ -16,6 +16,7 @@ from .forms import UserRegistrationForm, ProductForm, CheckoutForm, UserProfileF
 from .decorators import admin_required
 from .pdf_utils import generate_and_attach_pdf
 from .search_utils import search_products_bm25
+from .lucene_spec_search import search_specifications_lucene_style, get_lucene_scoring_note
 from .autocomplete import get_suggestions
 from .similarity import get_similar_products
 
@@ -132,6 +133,29 @@ def product_list(request):
         'selected_category': category_slug,
         'search_query': search_query,
         'wishlist_product_ids': wishlist_product_ids,
+    })
+
+
+def specification_search(request):
+    query = (request.GET.get('q') or '').strip()
+    score_order = (request.GET.get('score_order') or 'desc').lower()
+    if score_order not in {'asc', 'desc'}:
+        score_order = 'desc'
+
+    products = list(Product.objects.filter(is_active=True))
+    results = []
+    if query:
+        results = search_specifications_lucene_style(
+            products,
+            query,
+            score_order=score_order,
+        )
+
+    return render(request, 'shop/specification_search.html', {
+        'query': query,
+        'score_order': score_order,
+        'results': results,
+        'lucene_scoring_note': get_lucene_scoring_note(),
     })
 
 
