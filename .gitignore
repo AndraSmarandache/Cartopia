@@ -41,3 +41,6 @@ db.sqlite3-journal
 .DS_Store
 Thumbs.db
 
+# Java build output
+lucene-java/target/
+
