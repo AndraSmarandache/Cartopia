@@ -18,14 +18,17 @@ Cartopia is a production-grade e-commerce platform that goes beyond standard onl
 
 ## Screenshots
 
-<!-- Add screenshots here -->
 | Home Page | Product Detail | Search Results |
 |-----------|---------------|----------------|
-| ![Home]() | ![Product]() | ![Search]() |
+| ![Home](screenshots/home.png) | ![Product](screenshots/product-detail.png) | ![Search](screenshots/search.png) |
 
-| Shopping Cart | Admin Dashboard | Specification Search |
-|--------------|-----------------|---------------------|
-| ![Cart]() | ![Admin]() | ![Lucene]() |
+| Autocomplete | Shopping Cart | Admin Dashboard |
+|-------------|--------------|-----------------|
+| ![Autocomplete](screenshots/autocomplete.png) | ![Cart](screenshots/cart.png) | ![Admin](screenshots/dashboard.png) |
+
+| Specification Search |
+|---------------------|
+| ![Lucene](screenshots/spec-search.png) |
 
 ---
 
@@ -67,7 +70,7 @@ Cartopia is a production-grade e-commerce platform that goes beyond standard onl
 | PDF processing | ReportLab (generation), pypdf (extraction) |
 | Forms | django-crispy-forms + crispy-bootstrap5 |
 | Image handling | Pillow |
-| Build (Lucene) | Apache Maven |
+| Build (Lucene) | Apache Maven (pre-built JAR included) |
 
 ---
 
@@ -141,37 +144,70 @@ A detailed technical write-up is available in [`docs/SearchDocumentation.pdf`](d
 ### Prerequisites
 
 - Python 3.10+
-- Java 11+ (for Lucene search)
-- Apache Maven (to build the Lucene JAR)
+- Java 11+ (required to run the Lucene specification search)
 
-### Installation
+> The compiled Lucene JAR is included in the repository — no Maven build step needed.
+
+### 1. Clone the repository
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/cartopia.git
-cd cartopia
-
-# Windows — automated setup
-setup.bat
-
-# Linux / macOS
-bash setup.sh
+git clone https://github.com/AndraSmarandache/Cartopia.git
+cd Cartopia
 ```
 
-The setup scripts create a virtual environment, install Python dependencies, and build the Lucene JAR.
+### 2. Create and activate a virtual environment
 
-### Running
+**Windows (PowerShell):**
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+**Windows (Command Prompt):**
+```cmd
+python -m venv venv
+venv\Scripts\activate.bat
+```
+
+**Linux / macOS:**
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install dependencies
 
 ```bash
-# Windows shortcut
-run.bat
+pip install -r requirements.txt
+```
 
-# Or manually
-source venv/bin/activate   # Windows: venv\Scripts\activate
+### 4. Apply database migrations
+
+```bash
+python manage.py migrate
+```
+
+### 5. Start the server
+
+```bash
 python manage.py runserver
 ```
 
-Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser. A pre-loaded SQLite database with sample products, categories, and users is included so the application runs immediately.
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser.
+
+> The repository includes a pre-loaded `db.sqlite3` with sample products, categories, and user accounts — the app works immediately after cloning with no extra data setup.
+
+---
+
+### Windows shortcut
+
+If you prefer a one-click start after the first setup, run `run.bat` from a **Command Prompt** (not PowerShell) opened inside the project folder:
+
+```cmd
+run.bat
+```
+
+---
 
 ### Default Credentials
 
