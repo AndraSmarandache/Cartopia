@@ -1,100 +1,230 @@
 # Cartopia
 
-Django e-commerce application with product catalog, cart, wishlist, orders, and staff dashboard. Each product can have an optional PDF specifications document (uploaded or generated from product data). Includes search (BM25), autocomplete (trie), and similar-product recommendations (TF-IDF + cosine similarity).
+A full-featured e-commerce web application built with Django, featuring advanced search capabilities including BM25 ranking, predictive autocomplete, TF-IDF similarity recommendations, and Apache Lucene full-text search over product specifications.
+
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-4.2-092E20?style=flat&logo=django&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5-7952B3?style=flat&logo=bootstrap&logoColor=white)
+![Apache Lucene](https://img.shields.io/badge/Apache_Lucene-9+-E25A1C?style=flat&logo=apache&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?style=flat&logo=scikitlearn&logoColor=white)
 
 ---
 
-## How to run
+## Overview
 
-**Prerequisites:** Python 3.x (3.10+ recommended).
+Cartopia is a production-grade e-commerce platform that goes beyond standard online store functionality by integrating a multi-layered intelligent search engine. The platform combines a clean shopping experience with sophisticated Information Retrieval techniques — implemented both from scratch and via industry-standard tools.
 
-**First-time setup** (from the folder that contains `manage.py`):
+---
 
-1. **Create and activate a virtual environment**
+## Screenshots
 
-   ```bash
-   python -m venv venv
-   ```
+<!-- Add screenshots here -->
+| Home Page | Product Detail | Search Results |
+|-----------|---------------|----------------|
+| ![Home]() | ![Product]() | ![Search]() |
 
-   - **Windows (PowerShell):** `.\venv\Scripts\Activate.ps1`
-   - **Windows (Command Prompt):** `venv\Scripts\activate.bat`
-   - **Linux/macOS:** `source venv/bin/activate`
+| Shopping Cart | Admin Dashboard | Specification Search |
+|--------------|-----------------|---------------------|
+| ![Cart]() | ![Admin]() | ![Lucene]() |
 
-2. **Install dependencies**
+---
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Features
 
-3. **Apply database migrations**
+### Shopping Experience
+- Product catalog organized by category with image galleries
+- Product detail pages with specifications, reviews, and star ratings
+- Shopping cart with quantity management and real-time totals
+- Wishlist for saving products
+- Checkout flow with configurable delivery methods
+- Order history and status tracking (pending → processing → shipped → delivered)
+- User registration, authentication, and profile management
 
-   ```bash
-   python manage.py migrate
-   ```
+### Search & Information Retrieval
+- **BM25 full-text search** over product titles with substring and fuzzy matching (Levenshtein distance ≤ 2)
+- **Predictive autocomplete** powered by a Trie (prefix tree) data structure with instant suggestions
+- **Similarity recommendations** using TF-IDF vectorization + cosine similarity, displayed on each product page
+- **Specification document search** via Apache Lucene BM25 scoring over extracted PDF content
 
-4. **Load sample data** (optional; creates categories, products, test users)
+### Admin & Staff Tools
+- Dashboard with aggregate statistics (orders, revenue, active products)
+- Full product CRUD with image and PDF upload
+- Automatic PDF specification generation using ReportLab
+- Order status management
+- Review moderation system
 
-   ```bash
-   python manage.py load_sample_data
-   ```
+---
 
-5. **Start the server**
+## Tech Stack
 
-   ```bash
-   python manage.py runserver
-   ```
+| Layer | Technology |
+|-------|-----------|
+| Backend framework | Django 4.2 |
+| Database | SQLite (via Django ORM) |
+| Frontend | Bootstrap 5, Django Templates |
+| ML / IR | scikit-learn (TF-IDF, cosine similarity) |
+| Full-text search | Apache Lucene 9 (Java CLI via subprocess) |
+| PDF processing | ReportLab (generation), pypdf (extraction) |
+| Forms | django-crispy-forms + crispy-bootstrap5 |
+| Image handling | Pillow |
+| Build (Lucene) | Apache Maven |
 
-   Open **http://127.0.0.1:8000/** in your browser.
+---
 
-**Custom host/port:**
+## Architecture
 
-```bash
-python manage.py runserver 127.0.0.1:8080
+```
+┌─────────────────────────────────────────────┐
+│              Browser / Client               │
+└────────────────────┬────────────────────────┘
+                     │ HTTP
+┌────────────────────▼────────────────────────┐
+│           Django Views Layer                │
+│  (views.py — routing, auth, permissions)    │
+└──────┬──────────┬──────────┬────────────────┘
+       │          │          │
+┌──────▼───┐ ┌───▼────┐ ┌───▼──────────────┐
+│  BM25 +  │ │  Trie  │ │  TF-IDF + Cosine │
+│  Fuzzy   │ │  Auto- │ │  Similarity      │
+│  Search  │ │complete│ │  (scikit-learn)  │
+└──────┬───┘ └───┬────┘ └───┬──────────────┘
+       │         │          │
+┌──────▼─────────▼──────────▼──────────────┐
+│              Django ORM / SQLite          │
+└───────────────────────────────────────────┘
+       │
+┌──────▼──────────────────────────────────┐
+│  Apache Lucene (Java subprocess)        │
+│  — indexes PDF spec documents           │
+│  — BM25 scoring, full-text retrieval    │
+└─────────────────────────────────────────┘
 ```
 
-**Windows shortcut:** use `run.bat` in the project folder. It activates the venv and runs the server. Set `RUN_PORT=8080` (or `RUN_HOST` and `RUN_PORT`) before running if you want a different address.
+---
+
+## Search Engine Details
+
+### 1. BM25 Product Search (`shop/search_utils.py`)
+
+Okapi BM25 probabilistic ranking with parameters k₁ = 1.5 and b = 0.75. Extended with:
+- **Substring matching** — query "lap" matches "laptop"
+- **Levenshtein fuzzy matching** — "laptp" matches "laptop" with edit distance 1 (threshold: 2 edits, minimum term length: 3 characters)
+
+### 2. Autocomplete — Trie (`shop/autocomplete.py`)
+
+A prefix tree indexes all product titles at startup. Each node stores the set of product IDs reachable from that prefix, enabling O(m) retrieval where m is the length of the typed prefix. Suggestions are served via a JSON API endpoint consumed by the search bar in real time.
+
+### 3. Recommendations — TF-IDF + Cosine Similarity (`shop/similarity.py`)
+
+Product descriptions and specifications are vectorized using scikit-learn's `TfidfVectorizer` (vocabulary capped at 5 000 terms, English stop words removed). Pairwise cosine similarity is computed across the catalog; the top 4 nearest neighbors are displayed on each product detail page.
+
+### 4. Specification Search — Apache Lucene (`shop/lucene_spec_search.py`)
+
+A Java CLI wraps Apache Lucene 9 to index and query product specification PDFs. Text is extracted from PDFs (via pypdf), fed into Lucene's BM25 scorer, and results are returned as JSON ranked by Lucene score. The Django layer invokes the JAR via subprocess, allowing results to be sorted ascending or descending by relevance.
 
 ---
 
-## Tech stack
+## Documentation
 
-- Python 3.x
-- Django 4.2
-- SQLite (default)
-- Bootstrap 5
-- django-crispy-forms, Pillow, ReportLab, scikit-learn
+A detailed technical write-up is available in [`docs/SearchDocumentation.pdf`](docs/SearchDocumentation.pdf), covering:
 
-## Setup (detailed)
+- The autocomplete algorithm (Trie structure and prefix matching)
+- BM25 and Levenshtein fuzzy search implementation
+- TF-IDF vectorization and cosine similarity for recommendations
+- Apache Lucene index architecture and BM25 scoring
+- Query examples and result analysis
 
-From the project root (the folder containing `manage.py`), follow the steps under **How to run** above. The virtual environment must be activated before `pip install` and `python manage.py` commands.
+---
 
-## Test accounts (after load_sample_data)
+## Getting Started
 
-| Role  | Username | Password  |
-|-------|----------|-----------|
-| Admin | admin    | admin123  |
-| User  | testuser | test123   |
+### Prerequisites
 
-## Main features
+- Python 3.10+
+- Java 11+ (for Lucene search)
+- Apache Maven (to build the Lucene JAR)
 
-- **Public:** Product list and detail, categories, search, cart, wishlist, checkout, order history, user registration and profile.
-- **Search (BM25):** Full-text product search with BM25 ranking. Optional substring matching (e.g. "lap" matches "laptop"). Used on the home page and product list.
-- **Autocomplete:** While typing in the search bar, suggestions from a trie (prefix tree) over product titles; inline gray completion and dropdown, with keyboard navigation (arrows, Enter, Tab).
-- **Similar products:** On each product page, recommendations via TF-IDF and cosine similarity on name, description, and specifications (scikit-learn).
-- **Product specifications PDF:** Each product can have an attached PDF (descriptive document). On the product page it appears as "Download specifications file (PDF)" under the specifications section. PDFs can be uploaded manually or generated from the product’s name, description, and specifications via the staff dashboard or Django admin.
-- **Staff dashboard:** Product and order management, add/edit/delete products, generate specification PDFs for products, update order status. Access requires a staff user.
+### Installation
 
-Django admin is at `/admin/` for full backend management.
+```bash
+# Clone the repository
+git clone https://github.com/your-username/cartopia.git
+cd cartopia
 
-## Project structure
+# Windows — automated setup
+setup.bat
 
-- `ecommerce/` — Django project settings and root URL config.
-- `shop/` — Main app: models (Category, Product, Cart, Wishlist, Order, etc.), views, forms, URLs. Search: `search_utils.py` (BM25), `autocomplete.py` (trie), `similarity.py` (TF-IDF + cosine). PDFs: `pdf_utils.py`.
-- `templates/` — Base and app templates.
-- `static/` — Static assets.
-- `media/` — User-uploaded files (product images, PDFs). Tracked in the repo so clones include sample data and uploads.
-- `db.sqlite3` — SQLite database. Tracked in the repo.
+# Linux / macOS
+bash setup.sh
+```
+
+The setup scripts create a virtual environment, install Python dependencies, and build the Lucene JAR.
+
+### Running
+
+```bash
+# Windows shortcut
+run.bat
+
+# Or manually
+source venv/bin/activate   # Windows: venv\Scripts\activate
+python manage.py runserver
+```
+
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser. A pre-loaded SQLite database with sample products, categories, and users is included so the application runs immediately.
+
+### Default Credentials
+
+| Role | Username | Password |
+|------|----------|----------|
+| Admin / Staff | `admin` | `admin123` |
+| Test user | `testuser` | `test123` |
+
+---
+
+## Project Structure
+
+```
+cartopia/
+├── shop/
+│   ├── models.py              # ORM models — products, orders, cart, reviews
+│   ├── views.py               # All request handlers
+│   ├── search_utils.py        # BM25 + fuzzy search implementation
+│   ├── autocomplete.py        # Trie data structure for predictive search
+│   ├── similarity.py          # TF-IDF + cosine similarity recommendations
+│   ├── lucene_spec_search.py  # Apache Lucene integration
+│   ├── pdf_utils.py           # ReportLab PDF generation
+│   ├── forms.py               # Django forms (products, checkout, profile)
+│   ├── admin.py               # Customised Django admin
+│   └── templates/             # Bootstrap 5 HTML templates
+├── lucene-java/               # Java Maven project — Lucene CLI
+├── docs/
+│   └── SearchDocumentation.pdf  # Technical documentation
+├── media/                     # Uploaded images and PDFs
+├── static/                    # CSS / JS assets
+├── requirements.txt
+├── setup.bat / setup.sh
+└── run.bat
+```
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | Home — categories or BM25 search results |
+| GET | `/products/` | Paginated product listing |
+| GET | `/products/<slug>/` | Product detail with recommendations |
+| GET | `/api/autocomplete/?q=` | JSON autocomplete suggestions (Trie) |
+| GET | `/search/specifications/?q=` | Lucene specification search |
+| POST | `/cart/add/<id>/` | Add product to cart |
+| POST | `/checkout/` | Place order |
+| GET | `/orders/` | User order history |
+| GET | `/dashboard/` | Staff admin dashboard |
+
+---
 
 ## License
 
-See repository or project for license details.
+MIT License — see [LICENSE](LICENSE) for details.

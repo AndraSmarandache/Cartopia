@@ -41,6 +41,9 @@ db.sqlite3-journal
 .DS_Store
 Thumbs.db
 
-# Java build output
-lucene-java/target/
+# Java build output (JAR is committed directly, build artifacts are not)
+lucene-java/target/classes/
+lucene-java/target/maven-archiver/
+lucene-java/target/maven-status/
+lucene-java/target/lucene-search-cli-1.0.0.jar
 
